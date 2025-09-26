@@ -1,43 +1,44 @@
 import express from "express";
-import { Router } from "express";
-import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
-import { Request, Response } from "express";
-import { healthCheck } from "./controller";
-import { signUp, login } from "./controller/auth";
+import apiRoutes from "./routes";
+import { requestLogger, errorLogger, errorHandler, notFoundHandler } from "./middleware/error.middleware";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-const PORT = process.env.PORT || 8000;
+const port = 8000;
 
-const router = Router();
+// Request logging (only in development)
+if (process.env.NODE_ENV === 'development') {
+    app.use(requestLogger);
+}
 
+// Configure CORS for frontend integration
+app.use(cors({
+    origin: true, // Allow all origins for testing (change in production)
+    credentials: true, // Allow cookies
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
+}));
 
+// Better Auth handler (must come before express.json())
+app.all("/api/auth/*splat", toNodeHandler(auth));
 
-// app.use("/api/auth", auth.handler);
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use(
-  cors({
-    origin: "http://localhost:8000", 
-    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-  })
-);
+// Mount API routes
+app.use("/api", apiRoutes);
 
+// Error handling middleware (must be last)
+app.use(errorLogger);
+app.use(errorHandler);
+app.use(notFoundHandler);
 
-
-app.use('/api', router);
-
-router.post('/auth/register', signUp);
-router.post('/auth/login', login);
-
-// Integrate better-auth routes
-// app.use('/api/auth', toNodeHandler(auth));
-router.get('/health', healthCheck);
-
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(port, () => {
+	console.log(`🚀 StudyBuddy Server running on port ${port}`);
+	console.log(`📚 API Documentation: http://localhost:${port}/api`);
+	console.log(`🔐 Auth Endpoints: http://localhost:${port}/api/auth/*`);
+	console.log(`💊 Health Check: http://localhost:${port}/api/health`);
 });

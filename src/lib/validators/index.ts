@@ -7,6 +7,7 @@ export * from './common.validator';
 // Entity-specific validators
 export * from './user.validator';
 export * from './course.validator';
+export * from './quiz.validator';
 
 // Re-export commonly used schemas for convenience
 export {

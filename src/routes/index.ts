@@ -1,6 +1,7 @@
 import express from "express";
 import userRoutes from "./user.routes";
 import courseRoutes from "./course.routes";
+import quizRoutes from "./quiz.routes";
 // Import other route modules here as you create them
 
 const router = express.Router();
@@ -8,6 +9,7 @@ const router = express.Router();
 // Mount route modules
 router.use("/users", userRoutes);
 router.use("/courses", courseRoutes);
+router.use("/quizzes", quizRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {

@@ -22,6 +22,7 @@ Cookie: better-auth.session_token=your-session-token
 - **`/api/auth/*`** - Authentication (Better Auth)
 - **`/api/users`** - User management  
 - **`/api/courses`** - Course management
+- **`/api/quizzes`** - Quiz management
 - **`/api/health`** - Health check
 - **`/api/`** - API information
 
@@ -226,6 +227,7 @@ GET /api/users/:id
 #### Check If the User Logged In is Admin
 ```http
 GET /api/users/is-admin
+```
 
 **Access:** Admin only
 
@@ -560,6 +562,267 @@ PUT /api/courses/enrollments/:enrollmentId
 
 ---
 
+## 🧩 Quiz Management Routes
+
+### Get Course Quizzes
+```http
+GET /api/quizzes/course/:courseId
+```
+**Access:** Authenticated (enrolled users or admins)
+
+**Parameters:**
+- `courseId` (path) - Course UUID
+
+**Query Parameters:**
+- `page` (optional) - Page number (default: 1)
+- `limit` (optional) - Items per page (default: 10, max: 100)
+- `search` (optional) - Search term for quiz titles
+
+**Response:**
+```json
+{
+  "course": {
+    "id": "course-uuid",
+    "title": "Introduction to Programming"
+  },
+  "quizzes": [
+    {
+      "id": "quiz-uuid",
+      "title": "Variables and Data Types Quiz",
+      "timeLimit": 30,
+      "createdAt": "2025-09-28T10:00:00.000Z",
+      "questionCount": 10,
+      "submissionCount": 25,
+      "userSubmission": {
+        "id": "submission-uuid",
+        "score": 85,
+        "submittedAt": "2025-09-28T11:30:00.000Z"
+      }
+    }
+  ]
+}
+```
+
+### Get Quiz by ID
+```http
+GET /api/quizzes/:id
+```
+**Access:** Authenticated (enrolled users or admins)
+
+**Parameters:**
+- `id` (path) - Quiz UUID
+
+**Response:**
+```json
+{
+  "quiz": {
+    "id": "quiz-uuid",
+    "title": "Variables and Data Types Quiz",
+    "timeLimit": 30,
+    "createdAt": "2025-09-28T10:00:00.000Z",
+    "course": {
+      "id": "course-uuid",
+      "title": "Introduction to Programming"
+    },
+    "questions": [
+      {
+        "id": "question-uuid",
+        "text": "What is a variable?",
+        "answers": [
+          {
+            "id": "answer-uuid-1",
+            "text": "A container for storing data",
+            "isCorrect": true
+          },
+          {
+            "id": "answer-uuid-2", 
+            "text": "A type of function",
+            "isCorrect": false
+          }
+        ]
+      }
+    ],
+    "userSubmission": null
+  }
+}
+```
+
+### Create Quiz
+```http
+POST /api/quizzes
+```
+**Access:** Admin only
+
+**Request Body:**
+```json
+{
+  "courseId": "course-uuid",
+  "title": "Variables and Data Types Quiz",
+  "timeLimit": 30,
+  "questions": [
+    {
+      "text": "What is a variable?",
+      "answers": [
+        {
+          "text": "A container for storing data",
+          "isCorrect": true
+        },
+        {
+          "text": "A type of function", 
+          "isCorrect": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Quiz created successfully",
+  "quiz": {
+    "id": "quiz-uuid",
+    "title": "Variables and Data Types Quiz",
+    "timeLimit": 30,
+    "createdAt": "2025-09-28T10:00:00.000Z",
+    "course": {
+      "id": "course-uuid",
+      "title": "Introduction to Programming"
+    },
+    "questions": [...]
+  }
+}
+```
+
+### Update Quiz
+```http
+PUT /api/quizzes/:id
+```
+**Access:** Admin only
+
+**Parameters:**
+- `id` (path) - Quiz UUID
+
+**Request Body:**
+```json
+{
+  "title": "Updated Quiz Title",
+  "timeLimit": 45
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Quiz updated successfully",
+  "quiz": {
+    "id": "quiz-uuid",
+    "title": "Updated Quiz Title",
+    "timeLimit": 45,
+    "updatedAt": "2025-09-28T12:00:00.000Z"
+  }
+}
+```
+
+### Delete Quiz
+```http
+DELETE /api/quizzes/:id
+```
+**Access:** Admin only
+
+**Parameters:**
+- `id` (path) - Quiz UUID
+
+**Response:**
+```json
+{
+  "message": "Quiz deleted successfully"
+}
+```
+
+### Submit Quiz
+```http
+POST /api/quizzes/:id/submit
+```
+**Access:** Authenticated (enrolled users)
+
+**Parameters:**
+- `id` (path) - Quiz UUID
+
+**Request Body:**
+```json
+{
+  "answers": [
+    {
+      "questionId": "question-uuid-1",
+      "answerId": "answer-uuid-1"
+    },
+    {
+      "questionId": "question-uuid-2", 
+      "answerId": "answer-uuid-3"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Quiz submitted successfully",
+  "submission": {
+    "id": "submission-uuid",
+    "score": 85,
+    "submittedAt": "2025-09-28T11:30:00.000Z",
+    "correctAnswers": 8,
+    "totalQuestions": 10
+  }
+}
+```
+
+### Get Quiz Submissions
+```http
+GET /api/quizzes/:id/submissions
+```
+**Access:** Admin only
+
+**Parameters:**
+- `id` (path) - Quiz UUID
+
+**Response:**
+```json
+{
+  "quiz": {
+    "id": "quiz-uuid",
+    "title": "Variables and Data Types Quiz",
+    "course": {
+      "id": "course-uuid",
+      "title": "Introduction to Programming"
+    }
+  },
+  "submissions": [
+    {
+      "id": "submission-uuid",
+      "score": 85,
+      "submittedAt": "2025-09-28T11:30:00.000Z",
+      "user": {
+        "id": "user-uuid",
+        "name": "John Doe",
+        "email": "john@example.com"
+      }
+    }
+  ],
+  "stats": {
+    "totalSubmissions": 25,
+    "averageScore": 78,
+    "highestScore": 95,
+    "lowestScore": 45
+  }
+}
+```
+
+---
+
 ## 🏥 Health & Info Routes
 
 ### Health Check
@@ -593,6 +856,7 @@ GET /api
     "auth": "/api/auth/* - Authentication endpoints (Better Auth)",
     "users": "/api/users - User management endpoints",
     "courses": "/api/courses - Course management endpoints",
+    "quizzes": "/api/quizzes - Quiz management endpoints",
     "health": "/api/health - Health check endpoint"
   },
   "features": [
@@ -600,6 +864,7 @@ GET /api
     "User Management", 
     "Study Session Tracking",
     "Course Management",
+    "Quiz System",
     "Admin Panel Support"
   ]
 }
@@ -613,8 +878,8 @@ GET /api
 |-------|-------------|---------|
 | **Public** | No authentication required | Health, API info, course listing |
 | **User** | Valid session required | Profile, enrollment, own courses |
-| **Student** | Enrolled in specific course | Course classmates |
-| **Admin** | Admin role required | User management, course management, statistics |
+| **Student** | Enrolled in specific course | Course classmates, quiz taking |
+| **Admin** | Admin role required | User management, course management, quiz management, statistics |
 
 ## 📊 HTTP Status Codes
 

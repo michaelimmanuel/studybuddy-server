@@ -23,14 +23,44 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
-
-  role       String?
-  banned     Boolean?  @default(false)
-  banReason  String?
-  banExpires DateTime?
+  enrollments   Enrollment[]
+  role          String?
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
 
   @@unique([email])
   @@map("user")
+}
+
+model Course {
+  id          String   @id
+  title       String
+  description String?
+  enrollments Enrollment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  @@map("course")
+}
+
+model Enrollment {
+  id        String   @id
+  userId    String
+  courseId  String
+  status    EnrollmentStatus @default(PENDING)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, courseId])
+  @@map("enrollment")
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Session {

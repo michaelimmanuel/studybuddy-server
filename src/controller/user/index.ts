@@ -3,6 +3,7 @@ import { auth } from '../../lib/auth';
 import { fromNodeHeaders } from 'better-auth/node';
 import { APIError } from 'better-auth';
 import prisma from '../../lib/prisma';
+import { getValidatedBody, getValidatedQuery, getValidatedParams } from '../../lib/validators/validation.middleware';
 
 
 export const getUserFromSession = async (req: Request, res: Response) => {
@@ -106,7 +107,7 @@ export const getUserById = async (req: Request, res: Response) => {
 // Create user (mainly for admin purposes)
 export const createUser = async (req: Request, res: Response) => {
 	try {
-		const { name, email, role } = req.body;
+		const { name, email, role } = getValidatedBody(req);
 
 		if (!name || !email) {
 			return res.status(400).json({ message: 'Name and email are required' });
@@ -323,6 +324,32 @@ export const getUserStats = async (req: Request, res: Response) => {
 	}
 };
 
+export const isCurrentUserAdmin = async (req: Request, res: Response) => {
+	try {
+		const response = await auth.api.getSession({
+			headers: fromNodeHeaders(req.headers),
+			asResponse: true,
+			returnHeaders: false,
+		});
+		const session = await response.json();
+
+		if (!session || !session.user) {
+			return res.status(401).json({ isAdmin: false, message: 'No active session' });
+		}
+
+		const user = await prisma.user.findUnique({
+			where: { id: session.user.id },
+			select: { role: true },
+		});
+
+		const isAdmin = user?.role === 'admin';
+		res.json({ isAdmin });
+	} catch (err) {
+		console.error('Error checking admin status:', err);
+		res.status(500).json({ isAdmin: false, message: 'Internal server error' });
+	}
+};
+
 // Export all controller functions
 export const userController = {
 	getUserFromSession,
@@ -334,4 +361,5 @@ export const userController = {
 	getUserProfile,
 	updateUserProfile,
 	getUserStats,
+	isCurrentUserAdmin,
 };

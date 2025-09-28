@@ -1,29 +1,41 @@
 import express from "express";
 import { userController } from "../controller/user";
 import { requireAuth, requireAdmin, requireNotBanned } from "../middleware/auth.middleware";
-import { validateUUID } from "../middleware/validation.middleware";
+import { 
+    validateBody, 
+    validateQuery, 
+    validateParams 
+} from "../lib/validators/validation.middleware";
+import {
+    createUserSchema,
+    updateUserSchema,
+    updateUserProfileSchema,
+    usersQuerySchema,
+    userIdParamSchema
+} from "../lib/validators/user.validator";
 
 const router = express.Router();
 
 // Public routes (no auth required)
-router.get("/stats", userController.getUserStats);              // GET /api/users/stats (public stats)
+router.get("/stats", userController.getUserStats);              
 
 // Protected routes (authentication required)
-router.use(requireAuth); // All routes below require authentication
-router.use(requireNotBanned); // All routes below require user to not be banned
+router.use(requireAuth); 
+router.use(requireNotBanned); 
 
 // Current user session route
-router.get("/me", userController.getUserFromSession);           // GET /api/users/me
+router.get("/me", userController.getUserFromSession);          
 
 // User profile operations
-router.get("/:id/profile", validateUUID, userController.getUserProfile);  // GET /api/users/:id/profile
-router.put("/:id/profile", validateUUID, userController.updateUserProfile); // PUT /api/users/:id/profile
-
+router.get("/:id/profile", validateParams(userIdParamSchema), userController.getUserProfile);  
+router.put("/:id/profile", validateParams(userIdParamSchema), validateBody(updateUserProfileSchema), userController.updateUserProfile); 
+router.get("/is-admin", userController.isCurrentUserAdmin);
 // Admin-only routes
-router.get("/", requireAdmin, userController.getAllUsers);      // GET /api/users (admin only)
-router.get("/:id", requireAdmin, validateUUID, userController.getUserById); // GET /api/users/:id (admin only)
-router.post("/", requireAdmin, userController.createUser);     // POST /api/users (admin only)
-router.put("/:id", requireAdmin, validateUUID, userController.updateUser); // PUT /api/users/:id (admin only)
-router.delete("/:id", requireAdmin, validateUUID, userController.deleteUser); // DELETE /api/users/:id (admin only)
+router.get("/", requireAdmin, validateQuery(usersQuerySchema), userController.getAllUsers);      
+router.get("/:id", requireAdmin, validateParams(userIdParamSchema), userController.getUserById); 
+router.post("/", requireAdmin, validateBody(createUserSchema), userController.createUser);     
+router.put("/:id", requireAdmin, validateParams(userIdParamSchema), validateBody(updateUserSchema), userController.updateUser); 
+router.delete("/:id", requireAdmin, validateParams(userIdParamSchema), userController.deleteUser); 
+
 
 export default router;

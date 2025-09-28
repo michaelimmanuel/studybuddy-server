@@ -1,45 +1,88 @@
 import express from "express";
-// import { courseController } from "../controller/course";
+import { courseController } from "../controller/course";
+import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth.middleware";
+import { 
+    validateBody, 
+    validateQuery, 
+    validateParams 
+} from "../lib/validators/validation.middleware";
+import {
+    createCourseSchema,
+    updateCourseSchema,
+    updateEnrollmentSchema,
+    coursesQuerySchema,
+    courseIdParamSchema,
+    enrollmentIdParamSchema,
+    courseUserIdParamSchema
+} from "../lib/validators/course.validator";
 
 const router = express.Router();
 
-// Course CRUD operations
-// router.get("/", courseController.getAllCourses);               // GET /api/courses
-// router.post("/", courseController.createCourse);              // POST /api/courses
-// router.get("/:id", courseController.getCourseById);           // GET /api/courses/:id
-// router.put("/:id", courseController.updateCourse);            // PUT /api/courses/:id
-// router.delete("/:id", courseController.deleteCourse);         // DELETE /api/courses/:id
+// Public routes (with optional auth for enrolled status)
+router.get("/", 
+    optionalAuth, 
+    validateQuery(coursesQuerySchema), 
+    courseController.getAllCourses
+);
 
-// Course enrollment
-// router.post("/:id/enroll", courseController.enrollUser);      // POST /api/courses/:id/enroll
-// router.delete("/:id/unenroll", courseController.unenrollUser); // DELETE /api/courses/:id/unenroll
-// router.get("/:id/students", courseController.getCourseStudents); // GET /api/courses/:id/students
+// Admin stats route (must come before /:id route)
+router.get("/stats", requireAdmin, courseController.getCourseStats);
 
-// Course content
-// router.get("/:id/lessons", courseController.getCourseLessons); // GET /api/courses/:id/lessons
-// router.post("/:id/lessons", courseController.addLesson);      // POST /api/courses/:id/lessons
+router.get("/:id", 
+    optionalAuth, 
+    validateParams(courseIdParamSchema), 
+    courseController.getCourseById
+);             
+
+// Protected routes (authentication required)
+router.use(requireAuth); // All routes below require authentication
+
+// User enrollment routes
+router.post("/:id/enroll", 
+    validateParams(courseIdParamSchema), 
+    courseController.enrollUser
+);          
+router.delete("/:id/unenroll", 
+    validateParams(courseIdParamSchema), 
+    courseController.unenrollUser
+);    
+
+// Course access routes (for enrolled users or admins)
+router.get("/:id/students", 
+    validateParams(courseIdParamSchema), 
+    courseController.getCourseStudents
+); 
 
 // User's courses
-// router.get("/user/:userId", courseController.getUserCourses); // GET /api/courses/user/:userId
+router.get("/user/:userId", 
+    validateParams(courseUserIdParamSchema), 
+    courseController.getUserCourses
+);     
 
-// Placeholder route
-router.get("/", (req, res) => {
-    res.json({
-        message: "Course routes - Coming soon!",
-        availableEndpoints: [
-            "GET /api/courses - Get all courses",
-            "POST /api/courses - Create course",
-            "GET /api/courses/:id - Get course by ID",
-            "PUT /api/courses/:id - Update course",
-            "DELETE /api/courses/:id - Delete course",
-            "POST /api/courses/:id/enroll - Enroll user in course",
-            "DELETE /api/courses/:id/unenroll - Unenroll user from course",
-            "GET /api/courses/:id/students - Get course students",
-            "GET /api/courses/:id/lessons - Get course lessons",
-            "POST /api/courses/:id/lessons - Add lesson to course",
-            "GET /api/courses/user/:userId - Get user's courses"
-        ]
-    });
-});
+// Admin-only routes
+router.post("/", 
+    requireAdmin, 
+    validateBody(createCourseSchema), 
+    courseController.createCourse
+);                 
+router.put("/:id", 
+    requireAdmin, 
+    validateParams(courseIdParamSchema), 
+    validateBody(updateCourseSchema), 
+    courseController.updateCourse
+); 
+router.delete("/:id", 
+    requireAdmin, 
+    validateParams(courseIdParamSchema), 
+    courseController.deleteCourse
+); 
+
+// Enrollment management (admin only)
+router.put("/enrollments/:enrollmentId", 
+    requireAdmin, 
+    validateParams(enrollmentIdParamSchema), 
+    validateBody(updateEnrollmentSchema), 
+    courseController.manageEnrollment
+); 
 
 export default router;

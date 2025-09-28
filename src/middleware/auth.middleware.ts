@@ -50,25 +50,33 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 // Middleware to require admin role
 export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // First check authentication
-        await new Promise<void>((resolve, reject) => {
-            requireAuth(req, res, (err) => {
-                if (err) reject(err);
-                else resolve();
-            });
+        const response = await auth.api.getSession({
+            headers: fromNodeHeaders(req.headers),
+            asResponse: true,
+            returnHeaders: false,
         });
 
-        // Check if user has admin role
-        if (!req.user?.role) {
+        const session = await response.json();
+
+        if (!session || !session.user) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+
+        req.user = session.user;
+
+        if (!req.user?.role || req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Admin access required' });
         }
 
         next();
     } catch (error) {
-        // If requireAuth already sent a response, don't send another
-        if (!res.headersSent) {
-            return res.status(500).json({ message: 'Authorization error' });
+        if (error instanceof APIError) {
+            return res.status(error.statusCode).json({ 
+                message: error.body?.message || 'Authentication error' 
+            });
         }
+        console.error('Admin auth middleware error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 };
 

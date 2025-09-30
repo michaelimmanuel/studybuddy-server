@@ -10,9 +10,9 @@ import {
     createQuestionSchema,
     updateQuestionSchema,
     questionQuerySchema,
+    questionCourseIdParamSchema,
     questionIdParamSchema
 } from "../lib/validators/question.validator";
-import { courseIdParamSchema } from "../lib/validators";
 
 const router = express.Router();
 
@@ -21,21 +21,21 @@ router.use(requireAuth);
 
 // Course question routes
 router.get("/courses/:id/questions", 
-    validateParams(courseIdParamSchema),
+    validateParams(questionCourseIdParamSchema),
     validateQuery(questionQuerySchema), 
     questionController.getCourseQuestions
 );
 
 router.post("/courses/:id/questions", 
     requireAdmin,
-    validateParams(courseIdParamSchema),
+    validateParams(questionCourseIdParamSchema),
     validateBody(createQuestionSchema), 
     questionController.createQuestion
 );
 
 router.get("/courses/:id/questions/stats", 
     requireAdmin,
-    validateParams(courseIdParamSchema), 
+    validateParams(questionCourseIdParamSchema), 
     questionController.getCourseQuestionStats
 );
 

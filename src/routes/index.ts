@@ -1,7 +1,7 @@
 import express from "express";
 import userRoutes from "./user.routes";
 import courseRoutes from "./course.routes";
-import quizRoutes from "./quiz.routes";
+import questionRoutes from "./question.routes";
 // Import other route modules here as you create them
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
 // Mount route modules
 router.use("/users", userRoutes);
 router.use("/courses", courseRoutes);
-router.use("/quizzes", quizRoutes);
+router.use("/", questionRoutes); // Mount question routes at root level for /courses/:id/questions
 
 // Health check endpoint
 router.get("/health", (req, res) => {
@@ -29,7 +29,9 @@ router.get("/", (req, res) => {
         endpoints: {
             auth: "/api/auth/* - Authentication endpoints (Better Auth)",
             users: "/api/users - User management endpoints",
-            courses: "/api/courses - Course management endpoints", 
+            courses: "/api/courses - Course management endpoints",
+            questions: "/api/courses/:id/questions - Course questions endpoints",
+            questionsById: "/api/questions/:id - Individual question endpoints",
             health: "/api/health - Health check endpoint"
         },
         features: [
@@ -37,6 +39,7 @@ router.get("/", (req, res) => {
             "User Management",
             "Study Session Tracking", 
             "Course Management",
+            "Question Management",
             "Admin Panel Support"
         ]
     });

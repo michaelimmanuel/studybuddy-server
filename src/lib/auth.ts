@@ -23,29 +23,31 @@ export const auth = betterAuth({
         "http://127.0.0.1:5173",
         "https://studybuddy-web.vercel.app", // Add your frontend production URL
     ],
-    // Add explicit cookie configuration for cross-origin
-    session: {
-        cookieCache: {
-            enabled: true,
-            maxAge: 60 * 5, // 5 minutes
+    advanced: {
+        session: {
+            cookieCache: {
+                enabled: true,
+                maxAge: 60 * 5, // 5 minutes
+            },
         },
-    },
-    cookies: {
-        sessionToken: {
-            name: "better-auth.session_token",
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-            path: "/",
+        
+        cookies: {
+            sessionToken: {
+                name: "better-auth.session_token",
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+                maxAge: 60 * 60 * 24 * 7, // 7 days
+                path: "/",
+            },
+            csrfToken: {
+                name: "better-auth.csrf_token", 
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+                maxAge: 60 * 60 * 24, // 24 hours
+                path: "/",
+            }
         },
-        csrfToken: {
-            name: "better-auth.csrf_token", 
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 60 * 60 * 24, // 24 hours
-            path: "/",
-        }
     },
 });

@@ -40,6 +40,7 @@ export const auth = betterAuth({
                 sameSite: "none",
                 maxAge: 60 * 60 * 24 * 7, // 7 days
                 path: "/",
+                domain: process.env.NODE_ENV === "production" ? ".up.railway.app" : undefined,
             },
             csrfToken: {
                 name: "better-auth.csrf_token", 
@@ -48,6 +49,7 @@ export const auth = betterAuth({
                 sameSite: "none",
                 maxAge: 60 * 60 * 24, // 24 hours
                 path: "/",
+                domain: process.env.NODE_ENV === "production" ? ".up.railway.app" : undefined,
             }
         },
     },

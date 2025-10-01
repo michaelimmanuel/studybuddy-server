@@ -22,12 +22,15 @@ app.use(cors({
         "http://localhost:4173", 
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:5173",
+        "https://studybuddy-web.vercel.app", // Your production frontend
         "https://studybuddy-web-theta.vercel.app", // Your current deployment
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With", "Access-Control-Allow-Credentials"],
     exposedHeaders: ["Set-Cookie"],
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
 }));
 
 // Add cookie parser middleware BEFORE Better Auth

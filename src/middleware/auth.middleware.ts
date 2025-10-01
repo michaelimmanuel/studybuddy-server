@@ -21,6 +21,12 @@ declare global {
 // Middleware to require authentication
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log('Auth middleware - Request headers:', {
+            origin: req.headers.origin,
+            cookie: req.headers.cookie,
+            authorization: req.headers.authorization,
+        });
+
         const response = await auth.api.getSession({
             headers: fromNodeHeaders(req.headers),
             asResponse: true,
@@ -28,15 +34,19 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         });
 
         const session = await response.json();
+        console.log('🔍 Auth middleware - Session:', session);
 
         if (!session || !session.user) {
+            console.log('❌ Auth middleware - No session or user found');
             return res.status(401).json({ message: 'Authentication required' });
         }
 
+        console.log('✅ Auth middleware - User authenticated:', session.user.email);
         // Attach user to request
         req.user = session.user;
         next();
     } catch (error) {
+        console.error('❌ Auth middleware error:', error);
         if (error instanceof APIError) {
             return res.status(error.statusCode).json({ 
                 message: error.body?.message || 'Authentication error' 

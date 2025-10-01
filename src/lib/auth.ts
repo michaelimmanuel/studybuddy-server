@@ -34,7 +34,7 @@ export const auth = betterAuth({
         sessionToken: {
             name: "better-auth.session_token",
             httpOnly: true,
-            secure: false,
+            secure: true,
             sameSite: "none",
             maxAge: 60 * 60 * 24 * 7, // 7 days
             path: "/",
@@ -42,7 +42,7 @@ export const auth = betterAuth({
         csrfToken: {
             name: "better-auth.csrf_token", 
             httpOnly: true,
-            secure: false,
+            secure: true,
             sameSite: "none",
             maxAge: 60 * 60 * 24, // 24 hours
             path: "/",

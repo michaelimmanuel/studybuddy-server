@@ -69,6 +69,15 @@ export const getCourseQuestions = async (req: Request, res: Response) => {
             prisma.question.count({ where })
         ]);
 
+        // Filter explanation field based on user role
+        const filteredQuestions = questions.map(question => {
+            const { explanation, ...questionData } = question;
+            return {
+                ...questionData,
+                ...(isAdmin && { explanation })
+            };
+        });
+
         const totalPages = Math.ceil(total / limit);
 
         res.json({
@@ -76,7 +85,7 @@ export const getCourseQuestions = async (req: Request, res: Response) => {
                 id: course.id,
                 title: course.title
             },
-            questions,
+            questions: filteredQuestions,
             pagination: {
                 page,
                 limit,
@@ -126,7 +135,7 @@ export const getQuestionById = async (req: Request, res: Response) => {
                 where: {
                     userId_courseId: {
                         userId: userId!,
-                        courseId: question.course.id
+                        courseId: question.courseId
                     }
                 }
             });
@@ -136,7 +145,14 @@ export const getQuestionById = async (req: Request, res: Response) => {
             }
         }
 
-        res.json({ question });
+        // Filter explanation field based on user role
+        const { explanation, ...questionData } = question;
+        const filteredQuestion = {
+            ...questionData,
+            ...(isAdmin && { explanation })
+        };
+
+        res.json({ question: filteredQuestion });
     } catch (error) {
         console.error('Error fetching question:', error);
         res.status(500).json({ message: 'Internal server error' });
@@ -147,7 +163,7 @@ export const getQuestionById = async (req: Request, res: Response) => {
 export const createQuestion = async (req: Request, res: Response) => {
     try {
         const { id: courseId } = getValidatedParams(req);
-        const { text, answers } = getValidatedBody(req);
+        const { text, explanation, answers } = getValidatedBody(req);
 
         // Check if course exists
         const course = await prisma.course.findUnique({
@@ -171,7 +187,8 @@ export const createQuestion = async (req: Request, res: Response) => {
             const newQuestion = await tx.question.create({
                 data: {
                     courseId,
-                    text
+                    text,
+                    explanation: explanation || null
                 }
             });
 
@@ -208,7 +225,7 @@ export const createQuestion = async (req: Request, res: Response) => {
 export const updateQuestion = async (req: Request, res: Response) => {
     try {
         const { id } = getValidatedParams(req);
-        const { text, answers } = getValidatedBody(req);
+        const { text, explanation, answers } = getValidatedBody(req);
 
         // Check if question exists
         const existingQuestion = await prisma.question.findUnique({
@@ -230,10 +247,13 @@ export const updateQuestion = async (req: Request, res: Response) => {
 
         // Update question with answers in a transaction
         const question = await prisma.$transaction(async (tx) => {
-            // Update question text
+            // Update question text and explanation
             await tx.question.update({
                 where: { id },
-                data: { text }
+                data: { 
+                    text,
+                    explanation: explanation || null
+                }
             });
 
             // Delete existing answers

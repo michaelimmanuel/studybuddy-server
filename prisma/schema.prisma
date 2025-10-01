@@ -112,11 +112,12 @@ model Verification {
 }
 
 model Question {
-  id        String   @id @default(uuid())
-  courseId  String   // Changed: Direct relationship to course
-  text      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id          String   @id @default(uuid())
+  courseId    String   // Changed: Direct relationship to course
+  text        String
+  explanation String?  // Single explanation for the entire question
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   answers Answer[]

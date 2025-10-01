@@ -13,6 +13,9 @@ export const createQuestionSchema = z.object({
     text: z.string()
         .min(1, 'Question text is required')
         .max(1000, 'Question text must be less than 1000 characters'),
+    explanation: z.string()
+        .max(1000, 'Question explanation must be less than 1000 characters')
+        .optional(),
     answers: z.array(answerSchema)
         .min(2, 'Question must have at least 2 answers')
         .max(6, 'Question can have at most 6 answers')

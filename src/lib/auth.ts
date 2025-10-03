@@ -21,8 +21,8 @@ export const auth = betterAuth({
         "http://localhost:4173", 
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:5173",
-        "https://studybuddy-web.vercel.app", // Add your frontend production URL
-         "https://studybuddy-web-theta.vercel.app"
+        "https://studybuddymeds.com", // Your production domain
+        "https://www.studybuddymeds.com", // Your frontend domain with www
     ],
     advanced: {
         session: {
@@ -40,7 +40,7 @@ export const auth = betterAuth({
                 sameSite: "none",
                 maxAge: 60 * 60 * 24 * 7, // 7 days
                 path: "/",
-                domain: process.env.NODE_ENV === "production" ? ".up.railway.app" : undefined,
+                domain: process.env.NODE_ENV === "production" ? ".studybuddymeds.com" : undefined,
             },
             csrfToken: {
                 name: "better-auth.csrf_token", 
@@ -49,7 +49,7 @@ export const auth = betterAuth({
                 sameSite: "none",
                 maxAge: 60 * 60 * 24, // 24 hours
                 path: "/",
-                domain: process.env.NODE_ENV === "production" ? ".up.railway.app" : undefined,
+                domain: process.env.NODE_ENV === "production" ? ".studybuddymeds.com" : undefined,
             }
         },
     },

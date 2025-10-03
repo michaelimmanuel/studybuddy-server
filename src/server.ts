@@ -22,8 +22,8 @@ app.use(cors({
         "http://localhost:4173", 
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:5173",
-        "https://studybuddy-web.vercel.app", // Your production frontend
-        "https://studybuddy-web-theta.vercel.app", // Your current deployment
+        "https://studybuddymeds.com",
+        "https://www.studybuddymeds.com", // Your frontend domain
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

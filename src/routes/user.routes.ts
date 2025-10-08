@@ -36,6 +36,7 @@ router.get("/:id", requireAdmin, validateParams(userIdParamSchema), userControll
 router.post("/", requireAdmin, validateBody(createUserSchema), userController.createUser);     
 router.put("/:id", requireAdmin, validateParams(userIdParamSchema), validateBody(updateUserSchema), userController.updateUser); 
 router.delete("/:id", requireAdmin, validateParams(userIdParamSchema), userController.deleteUser); 
+router.post("/create-admin", requireAdmin, validateBody(createUserSchema), userController.createAdminUserWithPlugin);
 
 
 export default router;

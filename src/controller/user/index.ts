@@ -350,6 +350,29 @@ export const isCurrentUserAdmin = async (req: Request, res: Response) => {
 	}
 };
 
+export const createAdminUserWithPlugin = async (req: Request, res: Response) => {
+    try {
+        const { name, email, password } = getValidatedBody(req);
+
+		const user = await auth.api.createUser({
+			body: {
+				name,
+				email,
+				password,
+				role: 'admin',
+			},
+		});
+
+		res.status(201).json({ 
+			message: 'Admin user created successfully',
+			user
+		});
+    } catch (error) {
+        console.error('Error creating admin user:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 // Export all controller functions
 export const userController = {
 	getUserFromSession,
@@ -362,4 +385,5 @@ export const userController = {
 	updateUserProfile,
 	getUserStats,
 	isCurrentUserAdmin,
+	createAdminUserWithPlugin
 };

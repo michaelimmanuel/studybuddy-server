@@ -34,6 +34,5 @@ export {
 export {
     createCourseSchema,
     updateCourseSchema,
-    updateEnrollmentSchema,
     coursesQuerySchema
 } from './course.validator';

@@ -1,32 +1,32 @@
-import { Request, Response } from 'express';
-import prisma from '../../lib/prisma';
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.courseController = exports.getCourseStats = exports.deleteCourse = exports.updateCourse = exports.createCourse = exports.getCourseById = exports.getAllCourses = void 0;
+const prisma_1 = __importDefault(require("../../lib/prisma"));
 // Get all courses with pagination and search
-export const getAllCourses = async (req: Request, res: Response) => {
+const getAllCourses = async (req, res) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
-        const search = req.query.search as string || '';
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
         const skip = (page - 1) * limit;
-
         const whereClause = search
             ? {
                 OR: [
-                    { title: { contains: search, mode: 'insensitive' as const } },
-                    { description: { contains: search, mode: 'insensitive' as const } }
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { description: { contains: search, mode: 'insensitive' } }
                 ]
             }
             : {};
-
-        const courses = await prisma.course.findMany({
+        const courses = await prisma_1.default.course.findMany({
             where: whereClause,
             skip,
             take: limit,
             orderBy: { createdAt: 'desc' }
         });
-
-        const totalCourses = await prisma.course.count({ where: whereClause });
-
+        const totalCourses = await prisma_1.default.course.count({ where: whereClause });
         // Return courses without enrollment data
         const coursesData = courses.map(course => ({
             id: course.id,
@@ -35,7 +35,6 @@ export const getAllCourses = async (req: Request, res: Response) => {
             createdAt: course.createdAt,
             updatedAt: course.updatedAt
         }));
-
         res.json({
             courses: coursesData,
             pagination: {
@@ -45,25 +44,23 @@ export const getAllCourses = async (req: Request, res: Response) => {
                 totalCourses,
             },
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error fetching courses:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
+exports.getAllCourses = getAllCourses;
 // Get course by ID with detailed information
-export const getCourseById = async (req: Request, res: Response) => {
+const getCourseById = async (req, res) => {
     try {
         const { id } = req.params;
-
-        const course = await prisma.course.findUnique({
+        const course = await prisma_1.default.course.findUnique({
             where: { id }
         });
-
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
         }
-
         const courseData = {
             id: course.id,
             title: course.title,
@@ -71,42 +68,37 @@ export const getCourseById = async (req: Request, res: Response) => {
             createdAt: course.createdAt,
             updatedAt: course.updatedAt
         };
-
         res.json({ course: courseData });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error fetching course:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
+exports.getCourseById = getCourseById;
 // Create new course (admin only)
-export const createCourse = async (req: Request, res: Response) => {
+const createCourse = async (req, res) => {
     try {
         const { title, description } = req.body;
-
         if (!title) {
             return res.status(400).json({ message: 'Course title is required' });
         }
-
         // Check if course with same title already exists
-        const existingCourse = await prisma.course.findFirst({
+        const existingCourse = await prisma_1.default.course.findFirst({
             where: {
                 title: { equals: title, mode: 'insensitive' }
             }
         });
-
         if (existingCourse) {
             return res.status(409).json({ message: 'Course with this title already exists' });
         }
-
-        const course = await prisma.course.create({
+        const course = await prisma_1.default.course.create({
             data: {
                 id: crypto.randomUUID(),
                 title,
                 description: description || null,
             }
         });
-
         res.status(201).json({
             course: {
                 id: course.id,
@@ -116,50 +108,46 @@ export const createCourse = async (req: Request, res: Response) => {
                 updatedAt: course.updatedAt
             }
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error creating course:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
+exports.createCourse = createCourse;
 // Update course (admin only)
-export const updateCourse = async (req: Request, res: Response) => {
+const updateCourse = async (req, res) => {
     try {
         const { id } = req.params;
         const { title, description } = req.body;
-
         // Check if course exists
-        const existingCourse = await prisma.course.findUnique({
+        const existingCourse = await prisma_1.default.course.findUnique({
             where: { id }
         });
-
         if (!existingCourse) {
             return res.status(404).json({ message: 'Course not found' });
         }
-
         // If title is being updated, check for duplicates
         if (title && title !== existingCourse.title) {
-            const duplicateCourse = await prisma.course.findFirst({
+            const duplicateCourse = await prisma_1.default.course.findFirst({
                 where: {
                     title: { equals: title, mode: 'insensitive' },
                     id: { not: id }
                 }
             });
-
             if (duplicateCourse) {
                 return res.status(409).json({ message: 'Course with this title already exists' });
             }
         }
-
-        const updateData: any = {};
-        if (title !== undefined) updateData.title = title;
-        if (description !== undefined) updateData.description = description;
-
-        const updatedCourse = await prisma.course.update({
+        const updateData = {};
+        if (title !== undefined)
+            updateData.title = title;
+        if (description !== undefined)
+            updateData.description = description;
+        const updatedCourse = await prisma_1.default.course.update({
             where: { id },
             data: updateData
         });
-
         res.json({
             course: {
                 id: updatedCourse.id,
@@ -169,59 +157,57 @@ export const updateCourse = async (req: Request, res: Response) => {
                 updatedAt: updatedCourse.updatedAt
             }
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error updating course:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
+exports.updateCourse = updateCourse;
 // Delete course (admin only)
-export const deleteCourse = async (req: Request, res: Response) => {
+const deleteCourse = async (req, res) => {
     try {
         const { id } = req.params;
-
         // Check if course exists
-        const existingCourse = await prisma.course.findUnique({
+        const existingCourse = await prisma_1.default.course.findUnique({
             where: { id }
         });
-
         if (!existingCourse) {
             return res.status(404).json({ message: 'Course not found' });
         }
-
-        await prisma.course.delete({
+        await prisma_1.default.course.delete({
             where: { id }
         });
-
         res.json({ message: 'Course deleted successfully' });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error deleting course:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
+exports.deleteCourse = deleteCourse;
 // Get course statistics (admin only)
-export const getCourseStats = async (req: Request, res: Response) => {
+const getCourseStats = async (req, res) => {
     try {
-        const totalCourses = await prisma.course.count();
-
+        const totalCourses = await prisma_1.default.course.count();
         res.json({
             stats: {
                 totalCourses
             }
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error fetching course stats:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
+exports.getCourseStats = getCourseStats;
 // Export all controller functions
-export const courseController = {
-    getAllCourses,
-    getCourseById,
-    createCourse,
-    updateCourse,
-    deleteCourse,
-    getCourseStats,
+exports.courseController = {
+    getAllCourses: exports.getAllCourses,
+    getCourseById: exports.getCourseById,
+    createCourse: exports.createCourse,
+    updateCourse: exports.updateCourse,
+    deleteCourse: exports.deleteCourse,
+    getCourseStats: exports.getCourseStats,
 };

@@ -9,18 +9,14 @@ import {
 import {
     createCourseSchema,
     updateCourseSchema,
-    updateEnrollmentSchema,
     coursesQuerySchema,
-    courseIdParamSchema,
-    enrollmentIdParamSchema,
-    courseUserIdParamSchema
+    courseIdParamSchema
 } from "../lib/validators/course.validator";
 
 const router = express.Router();
 
-// Public routes (with optional auth for enrolled status)
+// Public routes
 router.get("/", 
-    optionalAuth, 
     validateQuery(coursesQuerySchema), 
     courseController.getAllCourses
 );
@@ -29,35 +25,9 @@ router.get("/",
 router.get("/stats", requireAdmin, courseController.getCourseStats);
 
 router.get("/:id", 
-    optionalAuth, 
     validateParams(courseIdParamSchema), 
     courseController.getCourseById
 );             
-
-// Protected routes (authentication required)
-router.use(requireAuth); // All routes below require authentication
-
-// User enrollment routes
-router.post("/:id/enroll", 
-    validateParams(courseIdParamSchema), 
-    courseController.enrollUser
-);          
-router.delete("/:id/unenroll", 
-    validateParams(courseIdParamSchema), 
-    courseController.unenrollUser
-);    
-
-// Course access routes (for enrolled users or admins)
-router.get("/:id/students", 
-    validateParams(courseIdParamSchema), 
-    courseController.getCourseStudents
-); 
-
-// User's courses
-router.get("/user/:userId", 
-    validateParams(courseUserIdParamSchema), 
-    courseController.getUserCourses
-);     
 
 // Admin-only routes
 router.post("/", 
@@ -75,14 +45,6 @@ router.delete("/:id",
     requireAdmin, 
     validateParams(courseIdParamSchema), 
     courseController.deleteCourse
-); 
-
-// Enrollment management (admin only)
-router.put("/enrollments/:enrollmentId", 
-    requireAdmin, 
-    validateParams(enrollmentIdParamSchema), 
-    validateBody(updateEnrollmentSchema), 
-    courseController.manageEnrollment
 ); 
 
 export default router;

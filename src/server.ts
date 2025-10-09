@@ -1,3 +1,4 @@
+import './lib/database-config'; // Ensure DATABASE_URL is set before anything else
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser"; // Add this import

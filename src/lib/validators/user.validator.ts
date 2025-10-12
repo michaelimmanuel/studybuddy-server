@@ -23,6 +23,12 @@ export const createUserSchema = z.object({
     role: z.enum(['admin', 'user']).optional().nullable(),
 });
 
+export const createAdminSchema = z.object({
+    name: nameSchema,
+    email: emailSchema,
+    password: passwordSchema,
+});
+
 export const updateUserSchema = z.object({
     name: optionalNameSchema,
     role: z.enum(['admin', 'user']).optional().nullable(),
@@ -119,8 +125,13 @@ export const validateSignIn = (data: unknown) => {
     return signInSchema.parse(data);
 };
 
+export const validateCreateAdmin = (data: unknown) => {
+    return createAdminSchema.parse(data);
+};
+
 // Type exports
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type CreateAdminInput = z.infer<typeof createAdminSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type UpdateUserProfileInput = z.infer<typeof updateUserProfileSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;

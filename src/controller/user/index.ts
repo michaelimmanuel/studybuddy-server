@@ -354,21 +354,191 @@ export const createAdminUserWithPlugin = async (req: Request, res: Response) => 
     try {
         const { name, email, password } = getValidatedBody(req);
 
-		const user = await auth.api.createUser({
-			body: {
-				name,
-				email,
-				password,
-				role: 'admin',
-			},
-		});
+        // Validate required fields
+        if (!name || !email || !password) {
+            return res.status(400).json({ 
+                message: 'Name, email, and password are required' 
+            });
+        }
 
-		res.status(201).json({ 
-			message: 'Admin user created successfully',
-			user
-		});
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            return res.status(409).json({ 
+                message: 'A user with this email already exists' 
+            });
+        }
+
+        // Create admin user using better-auth
+        const response = await auth.api.createUser({
+            body: {
+                name,
+                email,
+                password,
+                role: 'admin',
+            },
+        });
+
+        if (!response || !response.user) {
+            return res.status(500).json({ 
+                message: 'Failed to create admin user' 
+            });
+        }
+
+        // Log admin creation activity
+        console.log(`✅ Admin user created: ${email} by admin: ${req.user?.email}`);
+
+        res.status(201).json({ 
+            message: 'Admin user created successfully',
+            user: {
+                id: response.user.id,
+                name: response.user.name,
+                email: response.user.email,
+                role: response.user.role,
+                emailVerified: response.user.emailVerified,
+                createdAt: response.user.createdAt
+            }
+        });
     } catch (error) {
         console.error('Error creating admin user:', error);
+        
+        // Handle specific error cases
+        if (error instanceof Error) {
+            if (error.message.includes('email')) {
+                return res.status(400).json({ 
+                    message: 'Invalid email address' 
+                });
+            }
+            if (error.message.includes('password')) {
+                return res.status(400).json({ 
+                    message: 'Password does not meet requirements' 
+                });
+            }
+        }
+
+        res.status(500).json({ 
+            message: 'Internal server error while creating admin user' 
+        });
+    }
+};
+
+// Get all admin users
+export const getAllAdminUsers = async (req: Request, res: Response) => {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const skip = (page - 1) * limit;
+
+        const adminUsers = await prisma.user.findMany({
+            where: {
+                role: 'admin'
+            },
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                emailVerified: true,
+                image: true,
+                role: true,
+                banned: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        const totalAdminUsers = await prisma.user.count({
+            where: {
+                role: 'admin'
+            }
+        });
+
+        res.json({
+            adminUsers,
+            pagination: {
+                page,
+                limit,
+                totalPages: Math.ceil(totalAdminUsers / limit),
+                totalAdminUsers,
+            },
+        });
+    } catch (error) {
+        console.error('Error fetching admin users:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+// Revoke admin privileges (demote admin to user)
+export const revokeAdminPrivileges = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({
+            where: { id },
+        });
+
+        if (!existingUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if user is currently an admin
+        if (existingUser.role !== 'admin') {
+            return res.status(400).json({ 
+                message: 'User is not an admin' 
+            });
+        }
+
+        // Prevent self-demotion
+        if (req.user?.id === id) {
+            return res.status(403).json({ 
+                message: 'You cannot revoke your own admin privileges' 
+            });
+        }
+
+        // Check if this is the last admin
+        const adminCount = await prisma.user.count({
+            where: { 
+                role: 'admin',
+                banned: { not: true }
+            }
+        });
+
+        if (adminCount <= 1) {
+            return res.status(403).json({ 
+                message: 'Cannot revoke admin privileges. At least one admin must remain.' 
+            });
+        }
+
+        // Revoke admin privileges
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: { role: 'user' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                updatedAt: true,
+            },
+        });
+
+        // Log admin revocation activity
+        console.log(`⚠️ Admin privileges revoked for: ${existingUser.email} by admin: ${req.user?.email}`);
+
+        res.json({ 
+            message: 'Admin privileges revoked successfully',
+            user: updatedUser 
+        });
+    } catch (error) {
+        console.error('Error revoking admin privileges:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -385,5 +555,7 @@ export const userController = {
 	updateUserProfile,
 	getUserStats,
 	isCurrentUserAdmin,
-	createAdminUserWithPlugin
+	createAdminUserWithPlugin,
+	getAllAdminUsers,
+	revokeAdminPrivileges
 };

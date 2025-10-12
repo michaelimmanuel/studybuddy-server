@@ -272,6 +272,137 @@ DELETE /api/users/:id
 }
 ```
 
+---
+
+### Create Admin User
+```http
+POST /api/users/create-admin
+```
+**Access:** Admin only
+
+**Description:** Allows existing admins to create new admin users with full credentials.
+
+**Request Body:**
+```json
+{
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Admin user created successfully",
+  "user": {
+    "id": "uuid",
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "role": "admin",
+    "emailVerified": false,
+    "createdAt": "2025-10-10T10:00:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+```json
+// User already exists (409)
+{
+  "message": "A user with this email already exists"
+}
+
+// Invalid credentials (400)
+{
+  "message": "Password does not meet requirements"
+}
+```
+
+---
+
+### Get All Admin Users
+```http
+GET /api/users/admins
+```
+**Access:** Admin only
+
+**Description:** Retrieve a list of all users with admin privileges.
+
+**Query Parameters:**
+- `page` (number, optional) - Page number (default: 1)
+- `limit` (number, optional) - Items per page (default: 10)
+
+**Response (200):**
+```json
+{
+  "adminUsers": [
+    {
+      "id": "uuid",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "image": null,
+      "role": "admin",
+      "banned": false,
+      "createdAt": "2025-10-01T10:00:00.000Z",
+      "updatedAt": "2025-10-01T10:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1,
+    "totalAdminUsers": 3
+  }
+}
+```
+
+---
+
+### Revoke Admin Privileges
+```http
+PATCH /api/users/:id/revoke-admin
+```
+**Access:** Admin only
+
+**Description:** Demote an admin user to a regular user. Includes safety checks to prevent system lockout.
+
+**Parameters:**
+- `id` (UUID) - User ID of the admin to demote
+
+**Response (200):**
+```json
+{
+  "message": "Admin privileges revoked successfully",
+  "user": {
+    "id": "uuid",
+    "name": "Former Admin",
+    "email": "former-admin@example.com",
+    "role": "user",
+    "updatedAt": "2025-10-10T10:00:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+```json
+// Cannot revoke own privileges (403)
+{
+  "message": "You cannot revoke your own admin privileges"
+}
+
+// Last admin protection (403)
+{
+  "message": "Cannot revoke admin privileges. At least one admin must remain."
+}
+
+// User is not an admin (400)
+{
+  "message": "User is not an admin"
+}
+```
+
 ## Error Responses
 
 ### User Not Found (404)
@@ -309,6 +440,30 @@ curl -X PUT http://localhost:8000/api/users/USER_ID/profile \
   -H "Content-Type: application/json" \
   -H "Cookie: better-auth.session_token=YOUR_SESSION_TOKEN" \
   -d '{"name":"John Smith","image":"https://example.com/avatar.jpg"}'
+```
+
+### Create Admin User
+```bash
+curl -X POST http://localhost:8000/api/users/create-admin \
+  -H "Content-Type: application/json" \
+  -H "Cookie: better-auth.session_token=ADMIN_SESSION_TOKEN" \
+  -d '{
+    "name": "New Admin",
+    "email": "newadmin@example.com",
+    "password": "SecurePassword123!"
+  }'
+```
+
+### Get All Admin Users
+```bash
+curl -X GET http://localhost:8000/api/users/admins \
+  -H "Cookie: better-auth.session_token=ADMIN_SESSION_TOKEN"
+```
+
+### Revoke Admin Privileges
+```bash
+curl -X PATCH http://localhost:8000/api/users/USER_ID/revoke-admin \
+  -H "Cookie: better-auth.session_token=ADMIN_SESSION_TOKEN"
 ```
 
 ### Get All Users (Admin)

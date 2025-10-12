@@ -8,6 +8,7 @@ import {
 } from "../lib/validators/validation.middleware";
 import {
     createUserSchema,
+    createAdminSchema,
     updateUserSchema,
     updateUserProfileSchema,
     usersQuerySchema,
@@ -25,18 +26,23 @@ router.use(requireNotBanned);
 
 // Current user session route
 router.get("/me", userController.getUserFromSession);          
-
-// User profile operations
-router.get("/:id/profile", validateParams(userIdParamSchema), userController.getUserProfile);  
-router.put("/:id/profile", validateParams(userIdParamSchema), validateBody(updateUserProfileSchema), userController.updateUserProfile); 
 router.get("/is-admin", userController.isCurrentUserAdmin);
-// Admin-only routes
+
+// Admin-only routes - specific routes first before generic :id route
 router.get("/", requireAdmin, validateQuery(usersQuerySchema), userController.getAllUsers);      
+router.get("/admins", requireAdmin, validateQuery(usersQuerySchema), userController.getAllAdminUsers);
+router.post("/create-admin", requireAdmin, validateBody(createAdminSchema), userController.createAdminUserWithPlugin);
+
+// User profile operations - these have specific paths so they're safe
+router.get("/:id/profile", validateParams(userIdParamSchema), userController.getUserProfile);  
+router.put("/:id/profile", validateParams(userIdParamSchema), validateBody(updateUserProfileSchema), userController.updateUserProfile);
+
+// Generic ID routes - these should come last
 router.get("/:id", requireAdmin, validateParams(userIdParamSchema), userController.getUserById); 
 router.post("/", requireAdmin, validateBody(createUserSchema), userController.createUser);     
 router.put("/:id", requireAdmin, validateParams(userIdParamSchema), validateBody(updateUserSchema), userController.updateUser); 
 router.delete("/:id", requireAdmin, validateParams(userIdParamSchema), userController.deleteUser); 
-router.post("/create-admin", requireAdmin, validateBody(createUserSchema), userController.createAdminUserWithPlugin);
+router.patch("/:id/revoke-admin", requireAdmin, validateParams(userIdParamSchema), userController.revokeAdminPrivileges);
 
 
 export default router;

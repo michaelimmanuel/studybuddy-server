@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userController = exports.isCurrentUserAdmin = exports.getUserStats = exports.updateUserProfile = exports.getUserProfile = exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getAllUsers = exports.getUserFromSession = void 0;
+exports.userController = exports.revokeAdminPrivileges = exports.getAllAdminUsers = exports.createAdminUserWithPlugin = exports.isCurrentUserAdmin = exports.getUserStats = exports.updateUserProfile = exports.getUserProfile = exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getAllUsers = exports.getUserFromSession = void 0;
 const auth_1 = require("../../lib/auth");
 const node_1 = require("better-auth/node");
 const better_auth_1 = require("better-auth");
@@ -333,6 +333,181 @@ const isCurrentUserAdmin = async (req, res) => {
     }
 };
 exports.isCurrentUserAdmin = isCurrentUserAdmin;
+const createAdminUserWithPlugin = async (req, res) => {
+    try {
+        const { name, email, password } = (0, validation_middleware_1.getValidatedBody)(req);
+        // Validate required fields
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                message: 'Name, email, and password are required'
+            });
+        }
+        // Check if user already exists
+        const existingUser = await prisma_1.default.user.findUnique({
+            where: { email },
+        });
+        if (existingUser) {
+            return res.status(409).json({
+                message: 'A user with this email already exists'
+            });
+        }
+        // Create admin user using better-auth
+        const response = await auth_1.auth.api.createUser({
+            body: {
+                name,
+                email,
+                password,
+                role: 'admin',
+            },
+        });
+        if (!response || !response.user) {
+            return res.status(500).json({
+                message: 'Failed to create admin user'
+            });
+        }
+        // Log admin creation activity
+        console.log(`✅ Admin user created: ${email} by admin: ${req.user?.email}`);
+        res.status(201).json({
+            message: 'Admin user created successfully',
+            user: {
+                id: response.user.id,
+                name: response.user.name,
+                email: response.user.email,
+                role: response.user.role,
+                emailVerified: response.user.emailVerified,
+                createdAt: response.user.createdAt
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error creating admin user:', error);
+        // Handle specific error cases
+        if (error instanceof Error) {
+            if (error.message.includes('email')) {
+                return res.status(400).json({
+                    message: 'Invalid email address'
+                });
+            }
+            if (error.message.includes('password')) {
+                return res.status(400).json({
+                    message: 'Password does not meet requirements'
+                });
+            }
+        }
+        res.status(500).json({
+            message: 'Internal server error while creating admin user'
+        });
+    }
+};
+exports.createAdminUserWithPlugin = createAdminUserWithPlugin;
+// Get all admin users
+const getAllAdminUsers = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const adminUsers = await prisma_1.default.user.findMany({
+            where: {
+                role: 'admin'
+            },
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                emailVerified: true,
+                image: true,
+                role: true,
+                banned: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+        const totalAdminUsers = await prisma_1.default.user.count({
+            where: {
+                role: 'admin'
+            }
+        });
+        res.json({
+            adminUsers,
+            pagination: {
+                page,
+                limit,
+                totalPages: Math.ceil(totalAdminUsers / limit),
+                totalAdminUsers,
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error fetching admin users:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllAdminUsers = getAllAdminUsers;
+// Revoke admin privileges (demote admin to user)
+const revokeAdminPrivileges = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Check if user exists
+        const existingUser = await prisma_1.default.user.findUnique({
+            where: { id },
+        });
+        if (!existingUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        // Check if user is currently an admin
+        if (existingUser.role !== 'admin') {
+            return res.status(400).json({
+                message: 'User is not an admin'
+            });
+        }
+        // Prevent self-demotion
+        if (req.user?.id === id) {
+            return res.status(403).json({
+                message: 'You cannot revoke your own admin privileges'
+            });
+        }
+        // Check if this is the last admin
+        const adminCount = await prisma_1.default.user.count({
+            where: {
+                role: 'admin',
+                banned: { not: true }
+            }
+        });
+        if (adminCount <= 1) {
+            return res.status(403).json({
+                message: 'Cannot revoke admin privileges. At least one admin must remain.'
+            });
+        }
+        // Revoke admin privileges
+        const updatedUser = await prisma_1.default.user.update({
+            where: { id },
+            data: { role: 'user' },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                updatedAt: true,
+            },
+        });
+        // Log admin revocation activity
+        console.log(`⚠️ Admin privileges revoked for: ${existingUser.email} by admin: ${req.user?.email}`);
+        res.json({
+            message: 'Admin privileges revoked successfully',
+            user: updatedUser
+        });
+    }
+    catch (error) {
+        console.error('Error revoking admin privileges:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.revokeAdminPrivileges = revokeAdminPrivileges;
 // Export all controller functions
 exports.userController = {
     getUserFromSession: exports.getUserFromSession,
@@ -345,4 +520,7 @@ exports.userController = {
     updateUserProfile: exports.updateUserProfile,
     getUserStats: exports.getUserStats,
     isCurrentUserAdmin: exports.isCurrentUserAdmin,
+    createAdminUserWithPlugin: exports.createAdminUserWithPlugin,
+    getAllAdminUsers: exports.getAllAdminUsers,
+    revokeAdminPrivileges: exports.revokeAdminPrivileges
 };

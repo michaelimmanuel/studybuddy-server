@@ -99,6 +99,7 @@ model Question {
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   answers Answer[]
+  packageQuestions PackageQuestion[]
 
   @@map("question")
 }
@@ -114,6 +115,38 @@ model Answer {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@map("answer")
+}
+
+model Package {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  price           Float    // Price in dollars
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  createdBy       String   // Admin user ID who created the package
+  
+  // Relations
+  packageQuestions PackageQuestion[]
+  
+  @@map("package")
+}
+
+model PackageQuestion {
+  id         String   @id @default(uuid())
+  packageId  String
+  questionId String
+  order      Int?     // Optional order for questions in the package
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  package   Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  question  Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Ensure a question can only be added once per package
+  @@unique([packageId, questionId])
+  @@map("package_question")
 }
 
 

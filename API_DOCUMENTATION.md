@@ -23,6 +23,7 @@ Cookie: better-auth.session_token=your-session-token
 - **[User Management](./docs/users-api.md)** - User CRUD and profile management
 - **[Course Management](./docs/courses-api.md)** - Course creation, enrollment, and administration
 - **[Question Management](./docs/questions-api.md)** - Question bank with answer explanations
+- **[Package Management](./docs/packages-api.md)** - Question packages for sale
 - **[System Routes](./docs/system-api.md)** - Health checks and API info
 
 ## 🔒 Access Levels

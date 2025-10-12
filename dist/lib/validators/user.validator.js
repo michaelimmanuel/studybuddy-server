@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateSignIn = exports.validateSignUp = exports.validateUsersQuery = exports.validateUserProfileUpdate = exports.validateUserUpdate = exports.validateUserCreate = exports.userProfileResponseSchema = exports.userResponseSchema = exports.usersQuerySchema = exports.userIdParamSchema = exports.signInSchema = exports.signUpSchema = exports.updateUserProfileSchema = exports.updateUserSchema = exports.createUserSchema = exports.UserRole = void 0;
+exports.validateCreateAdmin = exports.validateSignIn = exports.validateSignUp = exports.validateUsersQuery = exports.validateUserProfileUpdate = exports.validateUserUpdate = exports.validateUserCreate = exports.userProfileResponseSchema = exports.userResponseSchema = exports.usersQuerySchema = exports.userIdParamSchema = exports.signInSchema = exports.signUpSchema = exports.updateUserProfileSchema = exports.updateUserSchema = exports.createAdminSchema = exports.createUserSchema = exports.UserRole = void 0;
 const zod_1 = require("zod");
 const common_validator_1 = require("./common.validator");
 // User role enum
@@ -13,6 +13,11 @@ exports.createUserSchema = zod_1.z.object({
     name: common_validator_1.nameSchema,
     email: common_validator_1.emailSchema,
     role: zod_1.z.enum(['admin', 'user']).optional().nullable(),
+});
+exports.createAdminSchema = zod_1.z.object({
+    name: common_validator_1.nameSchema,
+    email: common_validator_1.emailSchema,
+    password: common_validator_1.passwordSchema,
 });
 exports.updateUserSchema = zod_1.z.object({
     name: common_validator_1.optionalNameSchema,
@@ -99,3 +104,7 @@ const validateSignIn = (data) => {
     return exports.signInSchema.parse(data);
 };
 exports.validateSignIn = validateSignIn;
+const validateCreateAdmin = (data) => {
+    return exports.createAdminSchema.parse(data);
+};
+exports.validateCreateAdmin = validateCreateAdmin;

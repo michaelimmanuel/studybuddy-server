@@ -30,7 +30,9 @@ router.get("/is-admin", userController.isCurrentUserAdmin);
 
 // Admin-only routes - specific routes first before generic :id route
 router.get("/", requireAdmin, validateQuery(usersQuerySchema), userController.getAllUsers);      
-router.get("/admins", requireAdmin, validateQuery(usersQuerySchema), userController.getAllAdminUsers);
+
+// Specific named routes that should NOT match :id pattern
+router.get("/admin-list", requireAdmin, validateQuery(usersQuerySchema), userController.getAllAdminUsers);
 router.post("/create-admin", requireAdmin, validateBody(createAdminSchema), userController.createAdminUserWithPlugin);
 
 // User profile operations - these have specific paths so they're safe

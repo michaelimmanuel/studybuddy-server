@@ -123,6 +123,9 @@ model Package {
   description     String?
   price           Float    // Price in dollars
   isActive        Boolean  @default(true)
+  timeLimit       Int?     // Time limit in minutes (null = no time limit)
+  availableFrom   DateTime? // When package becomes available
+  availableUntil  DateTime? // When package expires/becomes unavailable
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
   createdBy       String   // Admin user ID who created the package

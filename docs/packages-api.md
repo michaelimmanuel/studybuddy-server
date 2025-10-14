@@ -267,6 +267,47 @@ DELETE /api/packages/:packageId/questions
 
 ---
 
+### Add Random Questions From Course
+```http
+POST /api/packages/:packageId/questions/random
+```
+
+**Description:** Add a random selection of questions from a course to the package. Skips questions already in the package.
+
+**Parameters:**
+- `packageId` (URL parameter): Package UUID
+
+**Access:** Admin only
+
+**Request Body:**
+```json
+{
+  "courseId": "course-uuid",
+  "count": 20
+}
+```
+
+**Validation Rules:**
+- `courseId`: Required UUID
+- `count`: Required integer 1-200
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "20 random question(s) added to package",
+  "data": {
+    "packageId": "package-uuid",
+    "courseId": "course-uuid",
+    "requested": 20,
+    "added": 18,
+    "remainingAvailable": 42
+  }
+}
+```
+
+> Note: If the requested count exceeds the available questions not already in the package, the endpoint will add as many as possible.
+
 ## 🚨 Error Responses
 
 ### 400 Bad Request

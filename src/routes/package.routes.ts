@@ -6,6 +6,7 @@ import {
   getPackages,
   getPackageById,
   addQuestionsToPackage,
+  addRandomQuestionsFromCourse,
   removeQuestionsFromPackage,
   updatePackage,
   deletePackage,
@@ -16,6 +17,7 @@ import {
   updatePackageSchema,
   packageIdSchema,
   removeQuestionsFromPackageSchema,
+  addRandomQuestionsFromCourseSchema,
 } from "../lib/validators/package.validator";
 
 const router = Router();
@@ -35,5 +37,12 @@ router.delete("/:id", requireAdmin, validateParams(packageIdSchema.shape.params)
 // Package question management (Admin only)
 router.post("/:packageId/questions", requireAdmin, validateParams(addQuestionsToPackageSchema.shape.params), validateBody(addQuestionsToPackageSchema.shape.body), addQuestionsToPackage); // Add questions to package
 router.delete("/:packageId/questions", requireAdmin, validateParams(removeQuestionsFromPackageSchema.shape.params), validateBody(removeQuestionsFromPackageSchema.shape.body), removeQuestionsFromPackage); // Remove questions from package
+router.post(
+  "/:packageId/questions/random",
+  requireAdmin,
+  validateParams(addRandomQuestionsFromCourseSchema.shape.params),
+  validateBody(addRandomQuestionsFromCourseSchema.shape.body),
+  addRandomQuestionsFromCourse
+); // Add random X questions from a course to a package
 
 export default router;

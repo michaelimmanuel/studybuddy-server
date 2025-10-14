@@ -19,7 +19,8 @@ router.get("/me", user_1.userController.getUserFromSession);
 router.get("/is-admin", user_1.userController.isCurrentUserAdmin);
 // Admin-only routes - specific routes first before generic :id route
 router.get("/", auth_middleware_1.requireAdmin, (0, validation_middleware_1.validateQuery)(user_validator_1.usersQuerySchema), user_1.userController.getAllUsers);
-router.get("/admins", auth_middleware_1.requireAdmin, (0, validation_middleware_1.validateQuery)(user_validator_1.usersQuerySchema), user_1.userController.getAllAdminUsers);
+// Specific named routes that should NOT match :id pattern
+router.get("/admin-list", auth_middleware_1.requireAdmin, (0, validation_middleware_1.validateQuery)(user_validator_1.usersQuerySchema), user_1.userController.getAllAdminUsers);
 router.post("/create-admin", auth_middleware_1.requireAdmin, (0, validation_middleware_1.validateBody)(user_validator_1.createAdminSchema), user_1.userController.createAdminUserWithPlugin);
 // User profile operations - these have specific paths so they're safe
 router.get("/:id/profile", (0, validation_middleware_1.validateParams)(user_validator_1.userIdParamSchema), user_1.userController.getUserProfile);

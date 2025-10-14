@@ -3,18 +3,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePackage = exports.updatePackage = exports.removeQuestionsFromPackage = exports.addQuestionsToPackage = exports.getPackageById = exports.getPackages = exports.createPackage = void 0;
+exports.deletePackage = exports.updatePackage = exports.addRandomQuestionsFromCourse = exports.removeQuestionsFromPackage = exports.addQuestionsToPackage = exports.getPackageById = exports.getPackages = exports.createPackage = void 0;
 const prisma_1 = __importDefault(require("../../lib/prisma"));
 // Create a new package (Admin only)
 const createPackage = async (req, res) => {
     try {
-        const { title, description, price } = req.body;
+        const { title, description, price, timeLimit, availableFrom, availableUntil } = req.body;
         const createdBy = req.user.id; // Assuming user is attached by auth middleware
         const newPackage = await prisma_1.default.package.create({
             data: {
                 title,
                 description,
                 price: parseFloat(price),
+                timeLimit: timeLimit ? parseInt(timeLimit, 10) : null,
+                availableFrom: availableFrom ? new Date(availableFrom) : null,
+                availableUntil: availableUntil ? new Date(availableUntil) : null,
                 createdBy,
             },
         });
@@ -244,11 +247,92 @@ const removeQuestionsFromPackage = async (req, res) => {
     }
 };
 exports.removeQuestionsFromPackage = removeQuestionsFromPackage;
+// Add random X questions from a course to a package (Admin only)
+const addRandomQuestionsFromCourse = async (req, res) => {
+    try {
+        const { packageId } = req.params;
+        const { courseId, count } = req.body;
+        // normalize count
+        const targetCount = typeof count === 'string' ? parseInt(count, 10) : count;
+        // Ensure package exists
+        const pkg = await prisma_1.default.package.findUnique({ where: { id: packageId } });
+        if (!pkg) {
+            return res.status(404).json({ success: false, message: "Package not found" });
+        }
+        // Ensure course exists
+        const course = await prisma_1.default.course.findUnique({ where: { id: courseId } });
+        if (!course) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+        // Find question IDs already in the package to avoid duplicates
+        const existing = await prisma_1.default.packageQuestion.findMany({
+            where: { packageId },
+            select: { questionId: true },
+        });
+        const existingIds = new Set(existing.map((e) => e.questionId));
+        // Count available questions in course excluding existing ones
+        const availableCount = await prisma_1.default.question.count({
+            where: { courseId, id: { notIn: Array.from(existingIds) } },
+        });
+        if (availableCount === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No available questions in this course to add to the package",
+            });
+        }
+        const take = Math.min(targetCount, availableCount);
+        // Get random 'take' questions from the course not already in package.
+        // Using SQL for true randomness and efficiency on large sets.
+        const randomQuestions = await prisma_1.default.$queryRaw `
+      SELECT q.id
+      FROM "question" q
+      WHERE q."courseId" = ${courseId}
+        AND q.id NOT IN (
+          SELECT pq."questionId" FROM "package_question" pq WHERE pq."packageId" = ${packageId}
+        )
+      ORDER BY random()
+      LIMIT ${take}
+    `;
+        if (randomQuestions.length === 0) {
+            return res.status(400).json({ success: false, message: "No questions selected" });
+        }
+        // Determine current max order to append new questions sequentially
+        const lastOrder = await prisma_1.default.packageQuestion.aggregate({
+            where: { packageId },
+            _max: { order: true },
+        });
+        let startOrder = (lastOrder._max.order ?? 0) + 1;
+        // Create relations in a transaction
+        const created = await prisma_1.default.$transaction(randomQuestions.map((q, idx) => prisma_1.default.packageQuestion.create({
+            data: {
+                packageId,
+                questionId: q.id,
+                order: startOrder + idx,
+            },
+        })));
+        res.json({
+            success: true,
+            message: `${created.length} random question(s) added to package`,
+            data: {
+                packageId,
+                courseId,
+                requested: targetCount,
+                added: created.length,
+                remainingAvailable: availableCount - created.length,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Error adding random questions to package:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+exports.addRandomQuestionsFromCourse = addRandomQuestionsFromCourse;
 // Update package (Admin only)
 const updatePackage = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, price, isActive } = req.body;
+        const { title, description, price, isActive, timeLimit, availableFrom, availableUntil } = req.body;
         const packageExists = await prisma_1.default.package.findUnique({
             where: { id },
         });
@@ -265,6 +349,9 @@ const updatePackage = async (req, res) => {
                 ...(description !== undefined && { description }),
                 ...(price && { price: parseFloat(price) }),
                 ...(isActive !== undefined && { isActive }),
+                ...(timeLimit !== undefined && { timeLimit: timeLimit ? parseInt(timeLimit, 10) : null }),
+                ...(availableFrom !== undefined && { availableFrom: availableFrom ? new Date(availableFrom) : null }),
+                ...(availableUntil !== undefined && { availableUntil: availableUntil ? new Date(availableUntil) : null }),
             },
         });
         res.json({

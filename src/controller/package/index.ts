@@ -7,14 +7,27 @@ export const createPackage = async (req: Request, res: Response) => {
     const { title, description, price, timeLimit, availableFrom, availableUntil } = req.body;
     const createdBy = req.user!.id; // Assuming user is attached by auth middleware
 
+    // Normalize inputs: validator allows string/number for price/timeLimit and optional dates
+    const priceNumber = typeof price === 'string' ? parseFloat(price) : Number(price);
+    const timeLimitNumber =
+      timeLimit === undefined || timeLimit === null || timeLimit === ''
+        ? null
+        : typeof timeLimit === 'string'
+          ? parseInt(timeLimit, 10)
+          : Number.isFinite(timeLimit)
+            ? Number(timeLimit)
+            : null;
+    const availableFromDate = availableFrom ? new Date(availableFrom) : null;
+    const availableUntilDate = availableUntil ? new Date(availableUntil) : null;
+
     const newPackage = await prisma.package.create({
       data: {
         title,
         description,
-        price: parseFloat(price),
-        timeLimit: timeLimit ? parseInt(timeLimit, 10) : null,
-        availableFrom: availableFrom ? new Date(availableFrom) : null,
-        availableUntil: availableUntil ? new Date(availableUntil) : null,
+        price: priceNumber,
+        timeLimit: timeLimitNumber,
+        availableFrom: availableFromDate,
+        availableUntil: availableUntilDate,
         createdBy,
       },
     });

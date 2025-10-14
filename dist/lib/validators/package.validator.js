@@ -8,10 +8,10 @@ exports.createPackageSchema = zod_1.z.object({
             .string()
             .min(1, "Title is required")
             .max(200, "Title must be less than 200 characters"),
-        description: zod_1.z
+        description: zod_1.z.preprocess((v) => (v === "" || v === null ? undefined : typeof v === "string" ? v.trim() : v), zod_1.z
             .string()
             .max(1000, "Description must be less than 1000 characters")
-            .optional(),
+            .optional()),
         price: zod_1.z
             .union([zod_1.z.string(), zod_1.z.number()])
             .refine((val) => {
@@ -29,13 +29,11 @@ exports.createPackageSchema = zod_1.z.object({
             .optional()
             .nullable(),
         availableFrom: zod_1.z
-            .string()
-            .datetime("Available from must be a valid datetime")
+            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available from must be a valid datetime"))
             .optional()
             .nullable(),
         availableUntil: zod_1.z
-            .string()
-            .datetime("Available until must be a valid datetime")
+            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available until must be a valid datetime"))
             .optional()
             .nullable(),
     }).refine((data) => {
@@ -67,10 +65,10 @@ exports.updatePackageSchema = zod_1.z.object({
             .min(1, "Title cannot be empty")
             .max(200, "Title must be less than 200 characters")
             .optional(),
-        description: zod_1.z
+        description: zod_1.z.preprocess((v) => (v === "" || v === null ? undefined : typeof v === "string" ? v.trim() : v), zod_1.z
             .string()
             .max(1000, "Description must be less than 1000 characters")
-            .optional(),
+            .optional()),
         price: zod_1.z
             .union([zod_1.z.string(), zod_1.z.number()])
             .refine((val) => {
@@ -90,13 +88,11 @@ exports.updatePackageSchema = zod_1.z.object({
             .optional()
             .nullable(),
         availableFrom: zod_1.z
-            .string()
-            .datetime("Available from must be a valid datetime")
+            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available from must be a valid datetime"))
             .optional()
             .nullable(),
         availableUntil: zod_1.z
-            .string()
-            .datetime("Available until must be a valid datetime")
+            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available until must be a valid datetime"))
             .optional()
             .nullable(),
     }).refine((data) => {

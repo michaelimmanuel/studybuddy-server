@@ -6,10 +6,13 @@ export const createPackageSchema = z.object({
       .string()
       .min(1, "Title is required")
       .max(200, "Title must be less than 200 characters"),
-    description: z
-      .string()
-      .max(1000, "Description must be less than 1000 characters")
-      .optional(),
+    description: z.preprocess(
+      (v) => (v === "" || v === null ? undefined : typeof v === "string" ? v.trim() : v),
+      z
+        .string()
+        .max(1000, "Description must be less than 1000 characters")
+        .optional()
+    ),
     price: z
       .union([z.string(), z.number()])
       .refine((val) => {
@@ -26,19 +29,33 @@ export const createPackageSchema = z.object({
       .optional()
       .nullable(),
     availableFrom: z
-      .string()
-      .datetime("Available from must be a valid datetime")
-      .optional()
-      .nullable(),
+      .union([
+        z
+          .string()
+          .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available from must be a valid datetime"),
+        z.date(),
+        z.literal(""),
+        z.null(),
+      ])
+      .optional(),
     availableUntil: z
-      .string()
-      .datetime("Available until must be a valid datetime")
-      .optional()
-      .nullable(),
+      .union([
+        z
+          .string()
+          .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available until must be a valid datetime"),
+        z.date(),
+        z.literal(""),
+        z.null(),
+      ])
+      .optional(),
   }).refine((data) => {
     // If both dates are provided, availableFrom should be before availableUntil
-    if (data.availableFrom && data.availableUntil) {
-      return new Date(data.availableFrom) < new Date(data.availableUntil);
+    const hasFrom = data.availableFrom !== undefined && data.availableFrom !== null && data.availableFrom !== "";
+    const hasUntil = data.availableUntil !== undefined && data.availableUntil !== null && data.availableUntil !== "";
+    if (hasFrom && hasUntil) {
+      const from = data.availableFrom instanceof Date ? data.availableFrom : new Date(data.availableFrom as string);
+      const until = data.availableUntil instanceof Date ? data.availableUntil : new Date(data.availableUntil as string);
+      return from < until;
     }
     return true;
   }, {
@@ -66,10 +83,13 @@ export const updatePackageSchema = z.object({
       .min(1, "Title cannot be empty")
       .max(200, "Title must be less than 200 characters")
       .optional(),
-    description: z
-      .string()
-      .max(1000, "Description must be less than 1000 characters")
-      .optional(),
+    description: z.preprocess(
+      (v) => (v === "" || v === null ? undefined : typeof v === "string" ? v.trim() : v),
+      z
+        .string()
+        .max(1000, "Description must be less than 1000 characters")
+        .optional()
+    ),
     price: z
       .union([z.string(), z.number()])
       .refine((val) => {
@@ -88,19 +108,33 @@ export const updatePackageSchema = z.object({
       .optional()
       .nullable(),
     availableFrom: z
-      .string()
-      .datetime("Available from must be a valid datetime")
-      .optional()
-      .nullable(),
+      .union([
+        z
+          .string()
+          .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available from must be a valid datetime"),
+        z.date(),
+        z.literal(""),
+        z.null(),
+      ])
+      .optional(),
     availableUntil: z
-      .string()
-      .datetime("Available until must be a valid datetime")
-      .optional()
-      .nullable(),
+      .union([
+        z
+          .string()
+          .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available until must be a valid datetime"),
+        z.date(),
+        z.literal(""),
+        z.null(),
+      ])
+      .optional(),
   }).refine((data) => {
     // If both dates are provided, availableFrom should be before availableUntil
-    if (data.availableFrom && data.availableUntil) {
-      return new Date(data.availableFrom) < new Date(data.availableUntil);
+    const hasFrom = data.availableFrom !== undefined && data.availableFrom !== null && data.availableFrom !== "";
+    const hasUntil = data.availableUntil !== undefined && data.availableUntil !== null && data.availableUntil !== "";
+    if (hasFrom && hasUntil) {
+      const from = data.availableFrom instanceof Date ? data.availableFrom : new Date(data.availableFrom as string);
+      const until = data.availableUntil instanceof Date ? data.availableUntil : new Date(data.availableUntil as string);
+      return from < until;
     }
     return true;
   }, {

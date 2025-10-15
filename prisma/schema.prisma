@@ -200,6 +200,7 @@ model PackagePurchase {
   pricePaid   Float
   purchasedAt DateTime @default(now())
   expiresAt   DateTime? // Optional expiration (null = lifetime)
+  approved    Boolean  @default(true) // Admin approval status
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
@@ -218,6 +219,7 @@ model BundlePurchase {
   pricePaid   Float
   purchasedAt DateTime @default(now())
   expiresAt   DateTime? // Optional expiration
+  approved    Boolean  @default(true) // Admin approval status
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   bundle Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)

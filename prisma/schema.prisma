@@ -27,6 +27,8 @@ model User {
   banned        Boolean?  @default(false)
   banReason     String?
   banExpires    DateTime?
+  packagePurchases PackagePurchase[]
+  bundlePurchases  BundlePurchase[]
 
   @@unique([email])
   @@map("user")
@@ -132,6 +134,8 @@ model Package {
   
   // Relations
   packageQuestions PackageQuestion[]
+  bundlePackages   BundlePackage[]
+  purchases        PackagePurchase[]
   
   @@map("package")
 }
@@ -150,6 +154,78 @@ model PackageQuestion {
   // Ensure a question can only be added once per package
   @@unique([packageId, questionId])
   @@map("package_question")
+}
+
+model Bundle {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  price           Float    // Bundle price (can be different from sum of package prices)
+  discount        Float?   // Optional discount percentage
+  isActive        Boolean  @default(true)
+  availableFrom   DateTime? // When bundle becomes available
+  availableUntil  DateTime? // When bundle expires/becomes unavailable
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  createdBy       String   // Admin user ID who created the bundle
+  
+  // Relations
+  bundlePackages BundlePackage[]
+  purchases      BundlePurchase[]
+  
+  @@map("bundle")
+}
+
+model BundlePackage {
+  id        String   @id @default(uuid())
+  bundleId  String
+  packageId String
+  order     Int?     // Optional order for packages in the bundle
+  createdAt DateTime @default(now())
+  
+  // Relations
+  bundle   Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  package  Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  
+  // Ensure a package can only be added once per bundle
+  @@unique([bundleId, packageId])
+  @@map("bundle_package")
+}
+
+/// Purchases of individual packages by users
+model PackagePurchase {
+  id          String   @id @default(uuid())
+  userId      String
+  packageId   String
+  pricePaid   Float
+  purchasedAt DateTime @default(now())
+  expiresAt   DateTime? // Optional expiration (null = lifetime)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, packageId])
+  @@index([userId])
+  @@index([packageId])
+  @@map("package_purchase")
+}
+
+/// Purchases of bundles (grants access to all included packages)
+model BundlePurchase {
+  id          String   @id @default(uuid())
+  userId      String
+  bundleId    String
+  pricePaid   Float
+  purchasedAt DateTime @default(now())
+  expiresAt   DateTime? // Optional expiration
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bundle Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bundleId])
+  @@index([userId])
+  @@index([bundleId])
+  @@map("bundle_purchase")
 }
 
 

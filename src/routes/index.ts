@@ -3,6 +3,8 @@ import userRoutes from "./user.routes";
 import courseRoutes from "./course.routes";
 import questionRoutes from "./question.routes";
 import packageRoutes from "./package.routes";
+import bundleRoutes from "./bundle.routes";
+import purchaseRoutes from "./purchase.routes";
 // Import other route modules here as you create them
 
 const router = express.Router();
@@ -11,6 +13,8 @@ const router = express.Router();
 router.use("/users", userRoutes);
 router.use("/courses", courseRoutes);
 router.use("/packages", packageRoutes);
+router.use("/bundles", bundleRoutes);
+router.use("/purchases", purchaseRoutes);
 router.use("/", questionRoutes); // Mount question routes at root level for /courses/:id/questions
 
 // Health check endpoint

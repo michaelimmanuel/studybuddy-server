@@ -35,18 +35,43 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Package not found' });
     }
 
-    // Calculate score
-    let correctCount = 0;
+    // Calculate score with partial credit support
+    let totalScore = 0;
     const quizAnswers = answers.map((answer: { questionId: string; selectedAnswerId: string | null }) => {
       const question = pkg.packageQuestions.find(pq => pq.questionId === answer.questionId)?.question;
       if (!question) {
         throw new Error(`Question ${answer.questionId} not found in package`);
       }
 
+      // Find all correct answers for this question
+      const correctAnswers = question.answers.filter(a => a.isCorrect);
+      const correctAnswerIds = correctAnswers.map(a => a.id);
+      
+      // Check if user selected a correct answer
       const selectedAnswer = question.answers.find(a => a.id === answer.selectedAnswerId);
       const isCorrect = selectedAnswer?.isCorrect || false;
 
-      if (isCorrect) correctCount++;
+      // Calculate points for this question based on number of correct answers
+      let questionPoints = 0;
+      
+      if (correctAnswerIds.length === 1) {
+        // Single correct answer - traditional scoring (1 or 0)
+        questionPoints = isCorrect ? 1 : 0;
+      } else if (correctAnswerIds.length > 1) {
+        // Multiple correct answers - partial credit
+        if (isCorrect) {
+          // Award points proportionally: 1 / number_of_correct_answers
+          questionPoints = 1 / correctAnswerIds.length;
+        } else {
+          // Wrong answer or no answer
+          questionPoints = 0;
+        }
+      } else {
+        // No correct answers marked (shouldn't happen, but handle it)
+        questionPoints = 0;
+      }
+
+      totalScore += questionPoints;
 
       return {
         questionId: answer.questionId,
@@ -56,7 +81,8 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
     });
 
     const totalQuestions = pkg.packageQuestions.length;
-    const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    const correctCount = Math.round(totalScore); // Round for display purposes
+    const score = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
 
     // Create quiz attempt with answers
     const attempt = await prisma.quizAttempt.create({

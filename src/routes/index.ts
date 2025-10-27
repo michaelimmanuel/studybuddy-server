@@ -5,6 +5,7 @@ import questionRoutes from "./question.routes";
 import packageRoutes from "./package.routes";
 import bundleRoutes from "./bundle.routes";
 import purchaseRoutes from "./purchase.routes";
+import quizAttemptsRoutes from "./quiz-attempts.routes";
 // Import other route modules here as you create them
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.use("/courses", courseRoutes);
 router.use("/packages", packageRoutes);
 router.use("/bundles", bundleRoutes);
 router.use("/purchases", purchaseRoutes);
+router.use("/quiz", quizAttemptsRoutes);
 router.use("/", questionRoutes); // Mount question routes at root level for /courses/:id/questions
 
 // Health check endpoint

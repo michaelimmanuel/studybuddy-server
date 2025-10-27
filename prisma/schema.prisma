@@ -29,6 +29,7 @@ model User {
   banExpires    DateTime?
   packagePurchases PackagePurchase[]
   bundlePurchases  BundlePurchase[]
+  quizAttempts     QuizAttempt[]
 
   @@unique([email])
   @@map("user")
@@ -96,12 +97,14 @@ model Question {
   courseId    String   // Changed: Direct relationship to course
   text        String
   explanation String?  // Single explanation for the entire question
+  imageUrl    String?  // Optional image URL for the question
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   answers Answer[]
   packageQuestions PackageQuestion[]
+  quizAnswers      QuizAnswer[]
 
   @@map("question")
 }
@@ -115,10 +118,10 @@ model Answer {
   updatedAt  DateTime @default(now()) @updatedAt
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  quizAnswers QuizAnswer[]
 
   @@map("answer")
 }
-
 model Package {
   id              String   @id @default(uuid())
   title           String
@@ -136,6 +139,7 @@ model Package {
   packageQuestions PackageQuestion[]
   bundlePackages   BundlePackage[]
   purchases        PackagePurchase[]
+  quizAttempts     QuizAttempt[]
   
   @@map("package")
 }
@@ -229,5 +233,47 @@ model BundlePurchase {
   @@index([bundleId])
   @@map("bundle_purchase")
 }
+
+/// Quiz attempts by users
+model QuizAttempt {
+  id              String   @id @default(uuid())
+  userId          String
+  packageId       String
+  score           Float    // Percentage score (0-100)
+  correctAnswers  Int      // Number of correct answers
+  totalQuestions  Int      // Total number of questions
+  timeSpent       Int      // Time spent in seconds
+  startedAt       DateTime // When the quiz was started
+  completedAt     DateTime @default(now()) // When the quiz was completed
+  createdAt       DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@index([userId])
+  @@index([packageId])
+  @@index([userId, packageId])
+  @@map("quiz_attempt")
+}
+
+/// Individual answers for each quiz attempt
+model QuizAnswer {
+  id               String   @id @default(uuid())
+  attemptId        String
+  questionId       String
+  selectedAnswerId String?  // Null if unanswered
+  isCorrect        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  attempt        QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedAnswer Answer?     @relation(fields: [selectedAnswerId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@map("quiz_answer")
+}
+
 
 

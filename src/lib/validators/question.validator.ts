@@ -19,6 +19,9 @@ export const createQuestionSchema = z.object({
     imageUrl: z.string()
         .url('Image must be a valid URL starting with http or https')
         .optional(),
+    explanationImageUrl: z.string()
+        .url('Explanation image must be a valid URL starting with http or https')
+        .optional(),
     answers: z.array(answerSchema)
         .min(2, 'Question must have at least 2 answers')
         .max(6, 'Question can have at most 6 answers')

@@ -93,13 +93,14 @@ model Verification {
 }
 
 model Question {
-  id          String   @id @default(uuid())
-  courseId    String   // Changed: Direct relationship to course
-  text        String
-  explanation String?  // Single explanation for the entire question
-  imageUrl    String?  // Optional image URL for the question
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  id                 String   @id @default(uuid())
+  courseId           String   // Changed: Direct relationship to course
+  text               String
+  explanation        String?  // Single explanation for the entire question
+  imageUrl           String?  // Optional image URL for the question
+  explanationImageUrl String? // Optional image URL for the explanation
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   answers Answer[]

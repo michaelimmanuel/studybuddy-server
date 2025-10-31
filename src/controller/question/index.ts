@@ -137,7 +137,7 @@ export const getQuestionById = async (req: Request, res: Response) => {
 export const createQuestion = async (req: Request, res: Response) => {
     try {
         const { id: courseId } = getValidatedParams(req);
-    const { text, explanation, imageUrl, answers } = getValidatedBody(req);
+    const { text, explanation, imageUrl, explanationImageUrl, answers } = getValidatedBody(req);
 
         // Check if course exists
         const course = await prisma.course.findUnique({
@@ -163,7 +163,8 @@ export const createQuestion = async (req: Request, res: Response) => {
                     courseId,
                     text,
                     explanation: explanation || null,
-                    imageUrl: imageUrl || null
+                    imageUrl: imageUrl || null,
+                    explanationImageUrl: explanationImageUrl || null
                 }
             });
 
@@ -200,7 +201,7 @@ export const createQuestion = async (req: Request, res: Response) => {
 export const updateQuestion = async (req: Request, res: Response) => {
     try {
         const { id } = getValidatedParams(req);
-    const { text, explanation, imageUrl, answers } = getValidatedBody(req);
+    const { text, explanation, imageUrl, explanationImageUrl, answers } = getValidatedBody(req);
 
         // Check if question exists
         const existingQuestion = await prisma.question.findUnique({
@@ -228,7 +229,8 @@ export const updateQuestion = async (req: Request, res: Response) => {
                 data: { 
                     text,
                     explanation: explanation || null,
-                    imageUrl: imageUrl || null
+                    imageUrl: imageUrl || null,
+                    explanationImageUrl: explanationImageUrl || null
                 }
             });
 

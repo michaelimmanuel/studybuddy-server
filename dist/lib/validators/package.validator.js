@@ -29,17 +29,33 @@ exports.createPackageSchema = zod_1.z.object({
             .optional()
             .nullable(),
         availableFrom: zod_1.z
-            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available from must be a valid datetime"))
-            .optional()
-            .nullable(),
+            .union([
+            zod_1.z
+                .string()
+                .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available from must be a valid datetime"),
+            zod_1.z.date(),
+            zod_1.z.literal(""),
+            zod_1.z.null(),
+        ])
+            .optional(),
         availableUntil: zod_1.z
-            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available until must be a valid datetime"))
-            .optional()
-            .nullable(),
+            .union([
+            zod_1.z
+                .string()
+                .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available until must be a valid datetime"),
+            zod_1.z.date(),
+            zod_1.z.literal(""),
+            zod_1.z.null(),
+        ])
+            .optional(),
     }).refine((data) => {
         // If both dates are provided, availableFrom should be before availableUntil
-        if (data.availableFrom && data.availableUntil) {
-            return new Date(data.availableFrom) < new Date(data.availableUntil);
+        const hasFrom = data.availableFrom !== undefined && data.availableFrom !== null && data.availableFrom !== "";
+        const hasUntil = data.availableUntil !== undefined && data.availableUntil !== null && data.availableUntil !== "";
+        if (hasFrom && hasUntil) {
+            const from = data.availableFrom instanceof Date ? data.availableFrom : new Date(data.availableFrom);
+            const until = data.availableUntil instanceof Date ? data.availableUntil : new Date(data.availableUntil);
+            return from < until;
         }
         return true;
     }, {
@@ -88,17 +104,33 @@ exports.updatePackageSchema = zod_1.z.object({
             .optional()
             .nullable(),
         availableFrom: zod_1.z
-            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available from must be a valid datetime"))
-            .optional()
-            .nullable(),
+            .union([
+            zod_1.z
+                .string()
+                .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available from must be a valid datetime"),
+            zod_1.z.date(),
+            zod_1.z.literal(""),
+            zod_1.z.null(),
+        ])
+            .optional(),
         availableUntil: zod_1.z
-            .preprocess((v) => (v === "" || v === null ? undefined : v), zod_1.z.string().datetime("Available until must be a valid datetime"))
-            .optional()
-            .nullable(),
+            .union([
+            zod_1.z
+                .string()
+                .refine((v) => v === "" || !isNaN(new Date(v).getTime()), "Available until must be a valid datetime"),
+            zod_1.z.date(),
+            zod_1.z.literal(""),
+            zod_1.z.null(),
+        ])
+            .optional(),
     }).refine((data) => {
         // If both dates are provided, availableFrom should be before availableUntil
-        if (data.availableFrom && data.availableUntil) {
-            return new Date(data.availableFrom) < new Date(data.availableUntil);
+        const hasFrom = data.availableFrom !== undefined && data.availableFrom !== null && data.availableFrom !== "";
+        const hasUntil = data.availableUntil !== undefined && data.availableUntil !== null && data.availableUntil !== "";
+        if (hasFrom && hasUntil) {
+            const from = data.availableFrom instanceof Date ? data.availableFrom : new Date(data.availableFrom);
+            const until = data.availableUntil instanceof Date ? data.availableUntil : new Date(data.availableUntil);
+            return from < until;
         }
         return true;
     }, {

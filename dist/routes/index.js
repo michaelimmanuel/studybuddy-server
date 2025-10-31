@@ -8,12 +8,18 @@ const user_routes_1 = __importDefault(require("./user.routes"));
 const course_routes_1 = __importDefault(require("./course.routes"));
 const question_routes_1 = __importDefault(require("./question.routes"));
 const package_routes_1 = __importDefault(require("./package.routes"));
+const bundle_routes_1 = __importDefault(require("./bundle.routes"));
+const purchase_routes_1 = __importDefault(require("./purchase.routes"));
+const quiz_attempts_routes_1 = __importDefault(require("./quiz-attempts.routes"));
 // Import other route modules here as you create them
 const router = express_1.default.Router();
 // Mount route modules
 router.use("/users", user_routes_1.default);
 router.use("/courses", course_routes_1.default);
 router.use("/packages", package_routes_1.default);
+router.use("/bundles", bundle_routes_1.default);
+router.use("/purchases", purchase_routes_1.default);
+router.use("/quiz", quiz_attempts_routes_1.default);
 router.use("/", question_routes_1.default); // Mount question routes at root level for /courses/:id/questions
 // Health check endpoint
 router.get("/health", (req, res) => {

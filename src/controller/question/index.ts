@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../../lib/prisma';
 import { getValidatedBody, getValidatedParams, getValidatedQuery } from '../../lib/validators/validation.middleware';
+import { sanitizeRichText } from '../../lib/sanitize';
 
 // Get all questions for a course
 export const getCourseQuestions = async (req: Request, res: Response) => {
@@ -161,8 +162,8 @@ export const createQuestion = async (req: Request, res: Response) => {
             const newQuestion = await tx.question.create({
                 data: {
                     courseId,
-                    text,
-                    explanation: explanation || null,
+                    text: sanitizeRichText(text) ?? '',
+                    explanation: sanitizeRichText(explanation),
                     imageUrl: imageUrl || null,
                     explanationImageUrl: explanationImageUrl || null
                 }
@@ -171,7 +172,7 @@ export const createQuestion = async (req: Request, res: Response) => {
             await tx.answer.createMany({
                 data: answers.map((answer: any) => ({
                     questionId: newQuestion.id,
-                    text: answer.text,
+                    text: sanitizeRichText(answer.text) ?? '',
                     isCorrect: answer.isCorrect || false
                 }))
             });
@@ -227,8 +228,8 @@ export const updateQuestion = async (req: Request, res: Response) => {
             await tx.question.update({
                 where: { id },
                 data: { 
-                    text,
-                    explanation: explanation || null,
+                    text: sanitizeRichText(text) ?? '',
+                    explanation: sanitizeRichText(explanation),
                     imageUrl: imageUrl || null,
                     explanationImageUrl: explanationImageUrl || null
                 }

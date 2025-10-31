@@ -17,6 +17,12 @@ exports.createQuestionSchema = zod_1.z.object({
     explanation: zod_1.z.string()
         .max(1000, 'Question explanation must be less than 1000 characters')
         .optional(),
+    imageUrl: zod_1.z.string()
+        .url('Image must be a valid URL starting with http or https')
+        .optional(),
+    explanationImageUrl: zod_1.z.string()
+        .url('Explanation image must be a valid URL starting with http or https')
+        .optional(),
     answers: zod_1.z.array(exports.answerSchema)
         .min(2, 'Question must have at least 2 answers')
         .max(6, 'Question can have at most 6 answers')

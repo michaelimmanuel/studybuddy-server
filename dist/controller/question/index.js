@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.questionController = exports.getCourseQuestionStats = exports.deleteQuestion = exports.updateQuestion = exports.createQuestion = exports.getQuestionById = exports.getCourseQuestions = void 0;
 const prisma_1 = __importDefault(require("../../lib/prisma"));
 const validation_middleware_1 = require("../../lib/validators/validation.middleware");
+const sanitize_1 = require("../../lib/sanitize");
 // Get all questions for a course
 const getCourseQuestions = async (req, res) => {
     try {
@@ -130,7 +131,7 @@ exports.getQuestionById = getQuestionById;
 const createQuestion = async (req, res) => {
     try {
         const { id: courseId } = (0, validation_middleware_1.getValidatedParams)(req);
-        const { text, explanation, answers } = (0, validation_middleware_1.getValidatedBody)(req);
+        const { text, explanation, imageUrl, explanationImageUrl, answers } = (0, validation_middleware_1.getValidatedBody)(req);
         // Check if course exists
         const course = await prisma_1.default.course.findUnique({
             where: { id: courseId }
@@ -150,14 +151,16 @@ const createQuestion = async (req, res) => {
             const newQuestion = await tx.question.create({
                 data: {
                     courseId,
-                    text,
-                    explanation: explanation || null
+                    text: (0, sanitize_1.sanitizeRichText)(text) ?? '',
+                    explanation: (0, sanitize_1.sanitizeRichText)(explanation),
+                    imageUrl: imageUrl || null,
+                    explanationImageUrl: explanationImageUrl || null
                 }
             });
             await tx.answer.createMany({
                 data: answers.map((answer) => ({
                     questionId: newQuestion.id,
-                    text: answer.text,
+                    text: (0, sanitize_1.sanitizeRichText)(answer.text) ?? '',
                     isCorrect: answer.isCorrect || false
                 }))
             });
@@ -186,7 +189,7 @@ exports.createQuestion = createQuestion;
 const updateQuestion = async (req, res) => {
     try {
         const { id } = (0, validation_middleware_1.getValidatedParams)(req);
-        const { text, explanation, answers } = (0, validation_middleware_1.getValidatedBody)(req);
+        const { text, explanation, imageUrl, explanationImageUrl, answers } = (0, validation_middleware_1.getValidatedBody)(req);
         // Check if question exists
         const existingQuestion = await prisma_1.default.question.findUnique({
             where: { id },
@@ -208,8 +211,10 @@ const updateQuestion = async (req, res) => {
             await tx.question.update({
                 where: { id },
                 data: {
-                    text,
-                    explanation: explanation || null
+                    text: (0, sanitize_1.sanitizeRichText)(text) ?? '',
+                    explanation: (0, sanitize_1.sanitizeRichText)(explanation),
+                    imageUrl: imageUrl || null,
+                    explanationImageUrl: explanationImageUrl || null
                 }
             });
             // Delete existing answers

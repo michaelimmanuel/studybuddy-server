@@ -53,9 +53,15 @@ app.use(errorLogger);
 app.use(errorHandler);
 app.use(notFoundHandler);
 
-app.listen(port, () => {
-    console.log(`🚀 StudyBuddy Server running on port ${port}`);
-    console.log(`📚 API Documentation: http://localhost:${port}/api`);
-    console.log(`🔐 Auth Endpoints: http://localhost:${port}/api/auth/*`);
-    console.log(`💊 Health Check: http://localhost:${port}/api/health`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, () => {
+        console.log(`🚀 StudyBuddy Server running on port ${port}`);
+        console.log(`📚 API Documentation: http://localhost:${port}/api`);
+        console.log(`🔐 Auth Endpoints: http://localhost:${port}/api/auth/*`);
+        console.log(`💊 Health Check: http://localhost:${port}/api/health`);
+    });
+}
+
+// Export for Vercel serverless
+export default app;

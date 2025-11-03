@@ -6,5 +6,5 @@ node_modules
 
 /.github
 
-# Build output
+# Build output (built on Vercel)
 /dist

@@ -1,14 +1,13 @@
 {
   "name": "studybuddy-server",
   "version": "1.0.0",
-  "type": "module",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development BETTER_AUTH_URL=http://localhost:8000 ts-node-dev --respawn --transpile-only src/server.ts",
     "dev:prod-db": "cross-env NODE_ENV=production BETTER_AUTH_URL=http://localhost:8000 ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "vercel-build": "prisma generate && prisma migrate deploy",
+    "vercel-build": "npm run build && prisma generate && prisma migrate deploy",
     "db:switch:dev": "node scripts/switch-db.js dev",
     "db:switch:prod": "node scripts/switch-db.js prod",
     "db:status": "node -e \"console.log('NODE_ENV:', process.env.NODE_ENV || 'development'); require('./src/lib/database-config').getDatabaseUrl();\""

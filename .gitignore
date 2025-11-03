@@ -5,3 +5,6 @@ node_modules
 /src/generated/prisma
 
 /.github
+
+# Build output
+/dist

@@ -46,13 +46,16 @@ TTL: 3600 (or Auto)
 2. Add the following variables for **Production** environment:
 
 ```env
-BETTER_AUTH_URL=https://api.studybuddymeds.com
 NODE_ENV=production
-DATABASE_URL_PROD=your_production_database_url
-BETTER_AUTH_SECRET=your_secret_key
+DATABASE_URL=postgresql://postgres.fgefagkulowrzilpusne:Michael241203@@##@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+BETTER_AUTH_URL=https://api.studybuddymeds.com
+BETTER_AUTH_SECRET=cMs4FARE1aoJhSiRq56yTOOQqcTeVUWx
 ```
 
-**Important**: Make sure to select **Production** for the environment!
+**Important**: 
+- Make sure to select **Production** for the environment!
+- Use `DATABASE_URL` (not `DATABASE_URL_PROD`)
+- Vercel automatically sets `NODE_ENV=production` for production deployments
 
 ### Step 4: Deploy to Vercel
 

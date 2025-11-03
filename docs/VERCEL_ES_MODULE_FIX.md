@@ -62,14 +62,15 @@ Make sure these are set in your Vercel project (Settings → Environment Variabl
 
 ```env
 NODE_ENV=production
-DATABASE_URL_PROD=postgresql://postgres.fgefagkulowrzilpusne:Michael241203@@##@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://postgres.fgefagkulowrzilpusne:Michael241203@@##@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
 BETTER_AUTH_URL=https://api.studybuddymeds.com
 BETTER_AUTH_SECRET=cMs4FARE1aoJhSiRq56yTOOQqcTeVUWx
 ```
 
 **Important Notes:**
 - Vercel will automatically set `NODE_ENV=production` for production deployments
-- The `DATABASE_URL_PROD` will be used automatically in production (see `database-config.ts`)
+- Use `DATABASE_URL` (not `DATABASE_URL_PROD`) in Vercel
+- The app will automatically use the correct database based on `NODE_ENV`
 - Make sure to add these to the **Production** environment in Vercel
 
 ## How Vercel Serverless Works
@@ -152,9 +153,10 @@ If you need to configure serverless function settings, you can add to `vercel.js
 3. Check environment variables are set correctly
 
 ### If database connection fails:
-1. Ensure `DATABASE_URL_PROD` is set in Vercel
+1. Ensure `DATABASE_URL` is set in Vercel (not `DATABASE_URL_PROD`)
 2. Check that your database allows connections from Vercel's IP ranges
 3. Verify the connection string format
+4. Check Vercel function logs for specific database errors
 
 ### If auth doesn't work:
 1. Ensure `BETTER_AUTH_URL` matches your domain

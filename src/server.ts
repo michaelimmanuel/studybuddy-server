@@ -1,7 +1,6 @@
-import './lib/database-config'; // Ensure DATABASE_URL is set before anything else
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser"; // Add this import
+import cookieParser from "cookie-parser";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import apiRoutes from "./routes";

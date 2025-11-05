@@ -89761,15 +89761,27 @@ var prismaAdapter = (prisma2, config4) => {
 
 // src/lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
-var globalForPrisma = global;
-var getDatabaseUrl = () => {
+
+// src/lib/database-config.ts
+function getDatabaseUrl() {
   const isProduction2 = process.env.NODE_ENV === "production";
   if (isProduction2) {
-    return process.env.DATABASE_URL || process.env.DATABASE_URL_PROD || "";
+    const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_URL_PROD;
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL is required in production environment");
+    }
+    return databaseUrl;
   }
-  return process.env.DATABASE_URL || "";
-};
-var prisma = globalForPrisma.prisma || new PrismaClient({
+  const devUrl = process.env.DATABASE_URL;
+  if (!devUrl) {
+    throw new Error("DATABASE_URL is required in development environment");
+  }
+  return devUrl;
+}
+
+// src/lib/prisma.ts
+var globalForPrisma = globalThis;
+var prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
     db: {
       url: getDatabaseUrl()
@@ -89777,7 +89789,7 @@ var prisma = globalForPrisma.prisma || new PrismaClient({
   },
   log: process.env.NODE_ENV === "development" ? ["query", "info", "warn", "error"] : ["error"]
 });
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+globalForPrisma.prisma = prisma;
 var prisma_default = prisma;
 
 // node_modules/better-auth/dist/shared/better-auth.ffWeg50w.mjs

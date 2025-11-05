@@ -3,8 +3,7 @@
   "regions": ["sin1"],
   "functions": {
     "api/index.js": {
-      "runtime": "nodejs20.x",
-      "regions": ["sin1"]
+      "runtime": "nodejs20.x"
     }
   },
   "builds": [

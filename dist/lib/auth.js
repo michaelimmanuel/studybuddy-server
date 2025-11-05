@@ -28,6 +28,7 @@ exports.auth = (0, better_auth_1.betterAuth)({
         "http://127.0.0.1:5173",
         "https://studybuddymeds.com", // Your production domain
         "https://www.studybuddymeds.com", // Your frontend domain with www
+        "https://api.studybuddymeds.com", // API subdomain
     ],
     advanced: {
         session: {

@@ -94,28 +94,7 @@ export const adminDeletePurchase = async (req: Request, res: Response) => {
 };
 import { Request, Response } from 'express';
 import prisma from '../../lib/prisma';
-
-// Helper: determine if user already has access to a package (direct or via bundle)
-const userHasPackageAccess = async (userId: string, packageId: string) => {
-  const purchase = await prisma.packagePurchase.findUnique({
-    where: { userId_packageId: { userId, packageId } },
-    select: { id: true },
-  });
-  if (purchase) return true;
-
-  const bundlePurchase = await prisma.bundlePurchase.findFirst({
-    where: {
-      userId,
-      bundle: {
-        bundlePackages: {
-          some: { packageId },
-        },
-      },
-    },
-    select: { id: true },
-  });
-  return !!bundlePurchase;
-};
+import { userHasPackageAccess } from '../../lib/access-control';
 
 export const purchasePackage = async (req: Request, res: Response) => {
   try {
@@ -137,10 +116,15 @@ export const purchasePackage = async (req: Request, res: Response) => {
         userId,
         packageId,
         pricePaid: pkg.price,
+        approved: false, // Requires admin approval
       },
     });
 
-    res.status(201).json({ success: true, message: 'Package purchased successfully', data: purchase });
+    res.status(201).json({ 
+      success: true, 
+      message: 'Package purchase request submitted. Please wait for admin approval to access the content.', 
+      data: purchase 
+    });
   } catch (err) {
     console.error('Error purchasing package', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -170,10 +154,15 @@ export const purchaseBundle = async (req: Request, res: Response) => {
         userId,
         bundleId,
         pricePaid: bundle.price,
+        approved: false, // Requires admin approval
       },
     });
 
-    res.status(201).json({ success: true, message: 'Bundle purchased successfully', data: purchase });
+    res.status(201).json({ 
+      success: true, 
+      message: 'Bundle purchase request submitted. Please wait for admin approval to access the content.', 
+      data: purchase 
+    });
   } catch (err) {
     console.error('Error purchasing bundle', err);
     res.status(500).json({ success: false, message: 'Internal server error' });

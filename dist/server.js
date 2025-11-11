@@ -94053,6 +94053,37 @@ var bundle_routes_default = router6;
 // src/routes/purchase.routes.ts
 var import_express6 = __toESM(require_express2(), 1);
 
+// src/lib/access-control.ts
+var userHasPackageAccess = async (userId, packageId) => {
+  const purchase = await prisma_default.packagePurchase.findUnique({
+    where: { userId_packageId: { userId, packageId } },
+    select: { id: true, approved: true, expiresAt: true }
+  });
+  if (purchase) {
+    if (!purchase.approved) return false;
+    if (purchase.expiresAt && new Date(purchase.expiresAt) < /* @__PURE__ */ new Date()) return false;
+    return true;
+  }
+  const bundlePurchase = await prisma_default.bundlePurchase.findFirst({
+    where: {
+      userId,
+      approved: true,
+      // Bundle must be approved
+      bundle: {
+        bundlePackages: {
+          some: { packageId }
+        }
+      }
+    },
+    select: { id: true, expiresAt: true }
+  });
+  if (bundlePurchase) {
+    if (bundlePurchase.expiresAt && new Date(bundlePurchase.expiresAt) < /* @__PURE__ */ new Date()) return false;
+    return true;
+  }
+  return false;
+};
+
 // src/controller/purchase/index.ts
 var adminListAllPurchases = async (req, res) => {
   try {
@@ -94141,25 +94172,6 @@ var adminDeletePurchase = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-var userHasPackageAccess = async (userId, packageId) => {
-  const purchase = await prisma_default.packagePurchase.findUnique({
-    where: { userId_packageId: { userId, packageId } },
-    select: { id: true }
-  });
-  if (purchase) return true;
-  const bundlePurchase = await prisma_default.bundlePurchase.findFirst({
-    where: {
-      userId,
-      bundle: {
-        bundlePackages: {
-          some: { packageId }
-        }
-      }
-    },
-    select: { id: true }
-  });
-  return !!bundlePurchase;
-};
 var purchasePackage = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -94175,10 +94187,16 @@ var purchasePackage = async (req, res) => {
       data: {
         userId,
         packageId,
-        pricePaid: pkg.price
+        pricePaid: pkg.price,
+        approved: false
+        // Requires admin approval
       }
     });
-    res.status(201).json({ success: true, message: "Package purchased successfully", data: purchase });
+    res.status(201).json({
+      success: true,
+      message: "Package purchase request submitted. Please wait for admin approval to access the content.",
+      data: purchase
+    });
   } catch (err) {
     console.error("Error purchasing package", err);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -94203,10 +94221,16 @@ var purchaseBundle = async (req, res) => {
       data: {
         userId,
         bundleId,
-        pricePaid: bundle.price
+        pricePaid: bundle.price,
+        approved: false
+        // Requires admin approval
       }
     });
-    res.status(201).json({ success: true, message: "Bundle purchased successfully", data: purchase });
+    res.status(201).json({
+      success: true,
+      message: "Bundle purchase request submitted. Please wait for admin approval to access the content.",
+      data: purchase
+    });
   } catch (err) {
     console.error("Error purchasing bundle", err);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -94287,6 +94311,13 @@ var submitQuizAttempt = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Missing required fields: packageId, answers, timeSpent, startedAt"
+      });
+    }
+    const hasAccess = await userHasPackageAccess(userId, packageId);
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have access to this package. Please purchase and wait for admin approval."
       });
     }
     const pkg = await prisma_default.package.findUnique({

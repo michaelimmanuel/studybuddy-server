@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../../lib/prisma';
+import { userHasPackageAccess } from '../../lib/access-control';
 
 // Submit a quiz attempt
 export const submitQuizAttempt = async (req: Request, res: Response) => {
@@ -12,6 +13,15 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields: packageId, answers, timeSpent, startedAt'
+      });
+    }
+
+    // Verify user has access to this package (approved purchase)
+    const hasAccess = await userHasPackageAccess(userId, packageId);
+    if (!hasAccess) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have access to this package. Please purchase and wait for admin approval.'
       });
     }
 

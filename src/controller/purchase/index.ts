@@ -99,7 +99,7 @@ import { userHasPackageAccess } from '../../lib/access-control';
 export const purchasePackage = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { packageId } = req.body;
+    const { packageId, proofImageUrl } = req.body;
 
     const pkg = await prisma.package.findUnique({ where: { id: packageId } });
     if (!pkg || !pkg.isActive) {
@@ -117,6 +117,7 @@ export const purchasePackage = async (req: Request, res: Response) => {
         packageId,
         pricePaid: pkg.price,
         approved: false, // Requires admin approval
+        proofImageUrl: proofImageUrl || null,
       },
     });
 
@@ -134,7 +135,7 @@ export const purchasePackage = async (req: Request, res: Response) => {
 export const purchaseBundle = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { bundleId } = req.body;
+    const { bundleId, proofImageUrl } = req.body;
 
     const bundle = await prisma.bundle.findUnique({
       where: { id: bundleId },
@@ -155,6 +156,7 @@ export const purchaseBundle = async (req: Request, res: Response) => {
         bundleId,
         pricePaid: bundle.price,
         approved: false, // Requires admin approval
+        proofImageUrl: proofImageUrl || null,
       },
     });
 

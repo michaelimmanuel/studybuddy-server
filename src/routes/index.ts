@@ -6,6 +6,7 @@ import packageRoutes from "./package.routes";
 import bundleRoutes from "./bundle.routes";
 import purchaseRoutes from "./purchase.routes";
 import quizAttemptsRoutes from "./quiz-attempts.routes";
+import referralRoutes from "./referral.routes";
 // Import other route modules here as you create them
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.use("/packages", packageRoutes);
 router.use("/bundles", bundleRoutes);
 router.use("/purchases", purchaseRoutes);
 router.use("/quiz", quizAttemptsRoutes);
+router.use("/referral-codes", referralRoutes);
 router.use("/", questionRoutes); // Mount question routes at root level for /courses/:id/questions
 
 // Health check endpoint
@@ -40,6 +42,10 @@ router.get("/", (req, res) => {
             courses: "/api/courses - Course management endpoints",
             questions: "/api/courses/:id/questions - Course questions endpoints",
             questionsById: "/api/questions/:id - Individual question endpoints",
+            packages: "/api/packages - Package management endpoints",
+            bundles: "/api/bundles - Bundle management endpoints",
+            purchases: "/api/purchases - Purchase management endpoints",
+            referralCodes: "/api/referral-codes - Referral code management endpoints",
             health: "/api/health - Health check endpoint"
         },
         features: [
@@ -48,6 +54,8 @@ router.get("/", (req, res) => {
             "Study Session Tracking", 
             "Course Management",
             "Question Management",
+            "Package & Bundle System",
+            "Referral Code Discounts",
             "Admin Panel Support"
         ]
     });

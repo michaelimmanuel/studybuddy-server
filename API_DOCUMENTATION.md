@@ -24,6 +24,8 @@ Cookie: better-auth.session_token=your-session-token
 - **[Course Management](./docs/courses-api.md)** - Course creation, enrollment, and administration
 - **[Question Management](./docs/questions-api.md)** - Question bank with answer explanations
 - **[Package Management](./docs/packages-api.md)** - Question packages for sale
+- **[Bundle Management](./docs/bundles-and-purchases-api.md)** - Package bundles and purchase management
+- **[Referral Codes](./docs/referral-codes-api.md)** - Discount codes for purchases
 - **[System Routes](./docs/system-api.md)** - Health checks and API info
 
 ## 🔒 Access Levels
@@ -89,8 +91,11 @@ Each feature has its own detailed documentation file:
 - **[Users API](./docs/users-api.md)** - User profiles, statistics, admin management
 - **[Courses API](./docs/courses-api.md)** - Course CRUD, enrollment, statistics
 - **[Questions API](./docs/questions-api.md)** - Question bank with explanations
+- **[Packages API](./docs/packages-api.md)** - Question packages for purchase
+- **[Bundles & Purchases API](./docs/bundles-and-purchases-api.md)** - Package bundles and purchase management
+- **[Referral Codes API](./docs/referral-codes-api.md)** - Discount codes for purchases
 - **[System API](./docs/system-api.md)** - Health checks and system info
 
 ---
 
-*Last updated: October 1, 2025*
+*Last updated: November 21, 2025*

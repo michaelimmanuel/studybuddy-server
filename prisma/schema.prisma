@@ -199,41 +199,51 @@ model BundlePackage {
 
 /// Purchases of individual packages by users
 model PackagePurchase {
-  id             String   @id @default(uuid())
-  userId         String
-  packageId      String
-  pricePaid      Float
-  purchasedAt    DateTime @default(now())
-  expiresAt      DateTime? // Optional expiration (null = lifetime)
-  approved       Boolean  @default(false) // Admin approval status - default to false for manual confirmation
-  proofImageUrl  String?  // Optional transaction proof image URL
+  id               String   @id @default(uuid())
+  userId           String
+  packageId        String
+  pricePaid        Float
+  originalPrice    Float    // Price before discount
+  discountApplied  Float    @default(0) // Discount amount applied
+  referralCodeId   String?  // Optional referral code used
+  purchasedAt      DateTime @default(now())
+  expiresAt        DateTime? // Optional expiration (null = lifetime)
+  approved         Boolean  @default(false) // Admin approval status - default to false for manual confirmation
+  proofImageUrl    String?  // Optional transaction proof image URL
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package      Package       @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  referralCode ReferralCode? @relation(fields: [referralCodeId], references: [id], onDelete: SetNull)
 
   @@unique([userId, packageId])
   @@index([userId])
   @@index([packageId])
+  @@index([referralCodeId])
   @@map("package_purchase")
 }
 
 /// Purchases of bundles (grants access to all included packages)
 model BundlePurchase {
-  id             String   @id @default(uuid())
-  userId         String
-  bundleId       String
-  pricePaid      Float
-  purchasedAt    DateTime @default(now())
-  expiresAt      DateTime? // Optional expiration
-  approved       Boolean  @default(false) // Admin approval status - default to false for manual confirmation
-  proofImageUrl  String?  // Optional transaction proof image URL
+  id               String   @id @default(uuid())
+  userId           String
+  bundleId         String
+  pricePaid        Float
+  originalPrice    Float    // Price before discount
+  discountApplied  Float    @default(0) // Discount amount applied
+  referralCodeId   String?  // Optional referral code used
+  purchasedAt      DateTime @default(now())
+  expiresAt        DateTime? // Optional expiration
+  approved         Boolean  @default(false) // Admin approval status - default to false for manual confirmation
+  proofImageUrl    String?  // Optional transaction proof image URL
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bundle Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bundle       Bundle        @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  referralCode ReferralCode? @relation(fields: [referralCodeId], references: [id], onDelete: SetNull)
 
   @@unique([userId, bundleId])
   @@index([userId])
   @@index([bundleId])
+  @@index([referralCodeId])
   @@map("bundle_purchase")
 }
 
@@ -276,6 +286,29 @@ model QuizAnswer {
   @@unique([attemptId, questionId])
   @@index([attemptId])
   @@map("quiz_answer")
+}
+
+/// Referral codes for discounts on purchases
+model ReferralCode {
+  id              String   @id @default(uuid())
+  code            String   @unique // Unique referral code (e.g., "SUMMER2025")
+  discountType    String   // "PERCENTAGE" or "FIXED"
+  discountValue   Float    // Percentage (0-100) or fixed amount in dollars
+  quota           Int      // Maximum number of times this code can be used
+  usedCount       Int      @default(0) // Current usage count
+  isActive        Boolean  @default(true) // Can be deactivated without deleting
+  expiresAt       DateTime? // Optional expiration date
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  createdBy       String   // Admin user ID who created the code
+  
+  // Relations
+  packagePurchases PackagePurchase[]
+  bundlePurchases  BundlePurchase[]
+  
+  @@index([code])
+  @@index([isActive])
+  @@map("referral_code")
 }
 
 

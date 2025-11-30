@@ -1,4 +1,5 @@
 import express from "express";
+import { normalizeRichTextFields } from "../middleware/richtext.middleware";
 import { questionController } from "../controller/question";
 import { requireAuth, requireAdmin } from "../middleware/auth.middleware";
 import { 
@@ -19,6 +20,15 @@ const router = express.Router();
 // All routes require authentication
 router.use(requireAuth);
 
+// Use shared middleware to normalize and validate rich-text fields
+const normalizeQuestionText = normalizeRichTextFields(
+    [
+        { key: "text", required: true },
+        { key: "explanation", required: false },
+    ],
+    { maxPlainTextChars: 2000 }
+);
+
 // Course question routes
 router.get("/courses/:id/questions", 
     validateParams(questionCourseIdParamSchema),
@@ -29,7 +39,8 @@ router.get("/courses/:id/questions",
 router.post("/courses/:id/questions", 
     requireAdmin,
     validateParams(questionCourseIdParamSchema),
-    validateBody(createQuestionSchema), 
+    validateBody(createQuestionSchema),
+    normalizeQuestionText,
     questionController.createQuestion
 );
 
@@ -48,7 +59,8 @@ router.get("/questions/:id",
 router.put("/questions/:id", 
     requireAdmin,
     validateParams(questionIdParamSchema),
-    validateBody(updateQuestionSchema), 
+    validateBody(updateQuestionSchema),
+    normalizeQuestionText,
     questionController.updateQuestion
 );
 

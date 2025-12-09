@@ -52,18 +52,18 @@ export function normalizeRichTextFields(
           disallowedTagsMode: "discard",
         });
 
-        // Convert <br> and block tags to newlines before stripping tags
+        // Convert <br> to single newline, block tags to double newlines before stripping tags
         let plain = sanitizedHtml
           .replace(/<br\s*\/?>(?![^<]*>)/gi, "\n")
-          .replace(/<(p|div|li|blockquote|h[1-6]|pre)[^>]*>/gi, "\n")
-          .replace(/<\/li>/gi, "\n")
+          .replace(/<(p|div|li|blockquote|h[1-6]|pre)[^>]*>/gi, "\n\n")
+          .replace(/<\/li>/gi, "\n\n")
           .replace(/<[^>]+>/g, "");
         plain = plain
           .replace(/[\u00A0]/g, " ")
           .replace(/[\u200B-\u200D\uFEFF]/g, "")
           .replace(/\r\n|\r|\n/g, "\n") // normalize all line breaks
           .replace(/[ \t]+/g, " ") // collapse spaces/tabs
-          .replace(/\n{2,}/g, "\n") // collapse multiple newlines
+          .replace(/\n{3,}/g, "\n\n") // collapse 3+ newlines to 2
           .trim();
 
         if (plain.length > MAX_PLAIN_TEXT_CHARS) {

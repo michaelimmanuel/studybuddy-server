@@ -52,11 +52,18 @@ export function normalizeRichTextFields(
           disallowedTagsMode: "discard",
         });
 
-        let plain = sanitizeHtml(sanitizedHtml, { allowedTags: [], allowedAttributes: {} });
+        // Convert <br> and block tags to newlines before stripping tags
+        let plain = sanitizedHtml
+          .replace(/<br\s*\/?>(?![^<]*>)/gi, "\n")
+          .replace(/<(p|div|li|blockquote|h[1-6]|pre)[^>]*>/gi, "\n")
+          .replace(/<\/li>/gi, "\n")
+          .replace(/<[^>]+>/g, "");
         plain = plain
           .replace(/[\u00A0]/g, " ")
           .replace(/[\u200B-\u200D\uFEFF]/g, "")
-          .replace(/\s+/g, " ")
+          .replace(/\r\n|\r|\n/g, "\n") // normalize all line breaks
+          .replace(/[ \t]+/g, " ") // collapse spaces/tabs
+          .replace(/\n{2,}/g, "\n") // collapse multiple newlines
           .trim();
 
         if (plain.length > MAX_PLAIN_TEXT_CHARS) {

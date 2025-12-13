@@ -92996,7 +92996,7 @@ var answerSchema = external_exports.object({
 });
 var createQuestionSchema = external_exports.object({
   text: external_exports.string().min(1, "Question text is required").max(1e3, "Question text must be less than 1000 characters"),
-  explanation: external_exports.string().max(1e3, "Question explanation must be less than 1000 characters").optional(),
+  explanation: external_exports.string().max(5e3, "Question explanation must be less than 5000 characters").optional(),
   imageUrl: external_exports.string().url("Image must be a valid URL starting with http or https").optional(),
   explanationImageUrl: external_exports.string().url("Explanation image must be a valid URL starting with http or https").optional(),
   answers: external_exports.array(answerSchema).min(2, "Question must have at least 2 answers").max(6, "Question can have at most 6 answers").refine(

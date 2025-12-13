@@ -14,7 +14,7 @@ export const createQuestionSchema = z.object({
         .min(1, 'Question text is required')
         .max(1000, 'Question text must be less than 1000 characters'),
     explanation: z.string()
-        .max(1000, 'Question explanation must be less than 1000 characters')
+        .max(5000, 'Question explanation must be less than 5000 characters')
         .optional(),
     imageUrl: z.string()
         .url('Image must be a valid URL starting with http or https')

@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./lib/auth";
+import { auth, attachPermissionsToRequest } from "./lib/auth";
 import apiRoutes from "./routes";
 import { requestLogger, errorLogger, errorHandler, notFoundHandler } from "./middleware/error.middleware";
 
@@ -39,7 +39,9 @@ app.use(cookieParser());
 
 // Better Auth handler (must come before express.json())
 app.all("/api/auth/*splat", toNodeHandler(auth));
-
+ 
+// Attach resolved global permissions to requests (reads from DB)
+app.use(attachPermissionsToRequest);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

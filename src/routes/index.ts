@@ -7,6 +7,8 @@ import bundleRoutes from "./bundle.routes";
 import purchaseRoutes from "./purchase.routes";
 import quizAttemptsRoutes from "./quiz-attempts.routes";
 import referralRoutes from "./referral.routes";
+import debugRoutes from "./debug.permissions";
+import adminPermissionsRoutes from "./admin.permissions";
 // Import other route modules here as you create them
 
 const router = express.Router();
@@ -19,6 +21,8 @@ router.use("/bundles", bundleRoutes);
 router.use("/purchases", purchaseRoutes);
 router.use("/quiz", quizAttemptsRoutes);
 router.use("/referral-codes", referralRoutes);
+router.use('/debug', debugRoutes);
+router.use('/admin', adminPermissionsRoutes);
 router.use("/", questionRoutes); // Mount question routes at root level for /courses/:id/questions
 
 // Health check endpoint

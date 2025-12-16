@@ -14,34 +14,36 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  role          String?
-  banned        Boolean?  @default(false)
-  banReason     String?
-  banExpires    DateTime?
+  id               String            @id
+  name             String
+  email            String
+  emailVerified    Boolean           @default(false)
+  image            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now()) @updatedAt
+  sessions         Session[]
+  accounts         Account[]
+  role             String?
+  banned           Boolean?          @default(false)
+  banReason        String?
+  banExpires       DateTime?
   packagePurchases PackagePurchase[]
   bundlePurchases  BundlePurchase[]
   quizAttempts     QuizAttempt[]
+  UserPermission   UserPermission[]
 
   @@unique([email])
   @@map("user")
 }
 
 model Course {
-  id          String   @id
+  id          String     @id
   title       String
   description String?
-  questions   Question[]  // Changed: Direct relationship to questions
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  questions   Question[] // Changed: Direct relationship to questions
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+
   @@map("course")
 }
 
@@ -93,17 +95,17 @@ model Verification {
 }
 
 model Question {
-  id                 String   @id @default(uuid())
-  courseId           String   // Changed: Direct relationship to course
-  text               String
-  explanation        String?  // Single explanation for the entire question
-  imageUrl           String?  // Optional image URL for the question
+  id                  String   @id @default(uuid())
+  courseId            String // Changed: Direct relationship to course
+  text                String
+  explanation         String? // Single explanation for the entire question
+  imageUrl            String? // Optional image URL for the question
   explanationImageUrl String? // Optional image URL for the explanation
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @default(now()) @updatedAt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
 
-  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  answers Answer[]
+  course           Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  answers          Answer[]
   packageQuestions PackageQuestion[]
   quizAnswers      QuizAnswer[]
 
@@ -118,30 +120,31 @@ model Answer {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
 
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question    Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
   quizAnswers QuizAnswer[]
 
   @@map("answer")
 }
+
 model Package {
-  id              String   @id @default(uuid())
-  title           String
-  description     String?
-  price           Float    // Price in dollars
-  isActive        Boolean  @default(true)
-  timeLimit       Int?     // Time limit in minutes (null = no time limit)
-  availableFrom   DateTime? // When package becomes available
-  availableUntil  DateTime? // When package expires/becomes unavailable
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now()) @updatedAt
-  createdBy       String   // Admin user ID who created the package
-  
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  price          Float // Price in dollars
+  isActive       Boolean   @default(true)
+  timeLimit      Int? // Time limit in minutes (null = no time limit)
+  availableFrom  DateTime? // When package becomes available
+  availableUntil DateTime? // When package expires/becomes unavailable
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  createdBy      String // Admin user ID who created the package
+
   // Relations
   packageQuestions PackageQuestion[]
   bundlePackages   BundlePackage[]
   purchases        PackagePurchase[]
   quizAttempts     QuizAttempt[]
-  
+
   @@map("package")
 }
 
@@ -149,35 +152,35 @@ model PackageQuestion {
   id         String   @id @default(uuid())
   packageId  String
   questionId String
-  order      Int?     // Optional order for questions in the package
+  order      Int? // Optional order for questions in the package
   createdAt  DateTime @default(now())
-  
+
   // Relations
-  package   Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  question  Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
+  package  Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
   // Ensure a question can only be added once per package
   @@unique([packageId, questionId])
   @@map("package_question")
 }
 
 model Bundle {
-  id              String   @id @default(uuid())
-  title           String
-  description     String?
-  price           Float    // Bundle price (can be different from sum of package prices)
-  discount        Float?   // Optional discount percentage
-  isActive        Boolean  @default(true)
-  availableFrom   DateTime? // When bundle becomes available
-  availableUntil  DateTime? // When bundle expires/becomes unavailable
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now()) @updatedAt
-  createdBy       String   // Admin user ID who created the bundle
-  
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  price          Float // Bundle price (can be different from sum of package prices)
+  discount       Float? // Optional discount percentage
+  isActive       Boolean   @default(true)
+  availableFrom  DateTime? // When bundle becomes available
+  availableUntil DateTime? // When bundle expires/becomes unavailable
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  createdBy      String // Admin user ID who created the bundle
+
   // Relations
   bundlePackages BundlePackage[]
   purchases      BundlePurchase[]
-  
+
   @@map("bundle")
 }
 
@@ -185,13 +188,13 @@ model BundlePackage {
   id        String   @id @default(uuid())
   bundleId  String
   packageId String
-  order     Int?     // Optional order for packages in the bundle
+  order     Int? // Optional order for packages in the bundle
   createdAt DateTime @default(now())
-  
+
   // Relations
-  bundle   Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
-  package  Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  
+  bundle  Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
   // Ensure a package can only be added once per bundle
   @@unique([bundleId, packageId])
   @@map("bundle_package")
@@ -199,17 +202,17 @@ model BundlePackage {
 
 /// Purchases of individual packages by users
 model PackagePurchase {
-  id               String   @id @default(uuid())
-  userId           String
-  packageId        String
-  pricePaid        Float
-  originalPrice    Float    // Price before discount
-  discountApplied  Float    @default(0) // Discount amount applied
-  referralCodeId   String?  // Optional referral code used
-  purchasedAt      DateTime @default(now())
-  expiresAt        DateTime? // Optional expiration (null = lifetime)
-  approved         Boolean  @default(false) // Admin approval status - default to false for manual confirmation
-  proofImageUrl    String?  // Optional transaction proof image URL
+  id              String    @id @default(uuid())
+  userId          String
+  packageId       String
+  pricePaid       Float
+  originalPrice   Float // Price before discount
+  discountApplied Float     @default(0) // Discount amount applied
+  referralCodeId  String? // Optional referral code used
+  purchasedAt     DateTime  @default(now())
+  expiresAt       DateTime? // Optional expiration (null = lifetime)
+  approved        Boolean   @default(false) // Admin approval status - default to false for manual confirmation
+  proofImageUrl   String? // Optional transaction proof image URL
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   package      Package       @relation(fields: [packageId], references: [id], onDelete: Cascade)
@@ -224,17 +227,17 @@ model PackagePurchase {
 
 /// Purchases of bundles (grants access to all included packages)
 model BundlePurchase {
-  id               String   @id @default(uuid())
-  userId           String
-  bundleId         String
-  pricePaid        Float
-  originalPrice    Float    // Price before discount
-  discountApplied  Float    @default(0) // Discount amount applied
-  referralCodeId   String?  // Optional referral code used
-  purchasedAt      DateTime @default(now())
-  expiresAt        DateTime? // Optional expiration
-  approved         Boolean  @default(false) // Admin approval status - default to false for manual confirmation
-  proofImageUrl    String?  // Optional transaction proof image URL
+  id              String    @id @default(uuid())
+  userId          String
+  bundleId        String
+  pricePaid       Float
+  originalPrice   Float // Price before discount
+  discountApplied Float     @default(0) // Discount amount applied
+  referralCodeId  String? // Optional referral code used
+  purchasedAt     DateTime  @default(now())
+  expiresAt       DateTime? // Optional expiration
+  approved        Boolean   @default(false) // Admin approval status - default to false for manual confirmation
+  proofImageUrl   String? // Optional transaction proof image URL
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   bundle       Bundle        @relation(fields: [bundleId], references: [id], onDelete: Cascade)
@@ -249,19 +252,19 @@ model BundlePurchase {
 
 /// Quiz attempts by users
 model QuizAttempt {
-  id              String   @id @default(uuid())
-  userId          String
-  packageId       String
-  score           Float    // Percentage score (0-100)
-  correctAnswers  Int      // Number of correct answers
-  totalQuestions  Int      // Total number of questions
-  timeSpent       Int      // Time spent in seconds
-  startedAt       DateTime // When the quiz was started
-  completedAt     DateTime @default(now()) // When the quiz was completed
-  createdAt       DateTime @default(now())
+  id             String   @id @default(uuid())
+  userId         String
+  packageId      String
+  score          Float // Percentage score (0-100)
+  correctAnswers Int // Number of correct answers
+  totalQuestions Int // Total number of questions
+  timeSpent      Int // Time spent in seconds
+  startedAt      DateTime // When the quiz was started
+  completedAt    DateTime @default(now()) // When the quiz was completed
+  createdAt      DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package Package      @relation(fields: [packageId], references: [id], onDelete: Cascade)
   answers QuizAnswer[]
 
   @@index([userId])
@@ -275,7 +278,7 @@ model QuizAnswer {
   id               String   @id @default(uuid())
   attemptId        String
   questionId       String
-  selectedAnswerId String?  // Null if unanswered
+  selectedAnswerId String? // Null if unanswered
   isCorrect        Boolean  @default(false)
   createdAt        DateTime @default(now())
 
@@ -290,26 +293,59 @@ model QuizAnswer {
 
 /// Referral codes for discounts on purchases
 model ReferralCode {
-  id              String   @id @default(uuid())
-  code            String   @unique // Unique referral code (e.g., "SUMMER2025")
-  discountType    String   // "PERCENTAGE" or "FIXED"
-  discountValue   Float    // Percentage (0-100) or fixed amount in dollars
-  quota           Int      // Maximum number of times this code can be used
-  usedCount       Int      @default(0) // Current usage count
-  isActive        Boolean  @default(true) // Can be deactivated without deleting
-  expiresAt       DateTime? // Optional expiration date
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now()) @updatedAt
-  createdBy       String   // Admin user ID who created the code
-  
+  id            String    @id @default(uuid())
+  code          String    @unique // Unique referral code (e.g., "SUMMER2025")
+  discountType  String // "PERCENTAGE" or "FIXED"
+  discountValue Float // Percentage (0-100) or fixed amount in dollars
+  quota         Int // Maximum number of times this code can be used
+  usedCount     Int       @default(0) // Current usage count
+  isActive      Boolean   @default(true) // Can be deactivated without deleting
+  expiresAt     DateTime? // Optional expiration date
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  createdBy     String // Admin user ID who created the code
+
   // Relations
   packagePurchases PackagePurchase[]
   bundlePurchases  BundlePurchase[]
-  
+
   @@index([code])
   @@index([isActive])
   @@map("referral_code")
 }
 
+/// Access control: permissions and per-user grants
+enum Grant {
+  ALLOW
+  DENY
+}
 
+model Permission {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
 
+  userPermissions UserPermission[]
+
+  @@map("permission")
+}
+
+model UserPermission {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  permissionId Int
+  grant        Grant    @default(ALLOW)
+  resourceType String? // e.g., "course", "package"
+  resourceId   String? // resource primary key (string UUID)
+  createdAt    DateTime @default(now())
+  createdBy    String?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId, resourceType, resourceId])
+  @@index([userId])
+  @@index([permissionId])
+  @@index([resourceType, resourceId])
+  @@map("user_permission")
+}

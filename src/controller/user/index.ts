@@ -21,7 +21,25 @@ export const getUserFromSession = async (req: Request, res: Response) => {
 			return res.status(401).json({ message: 'No active session' });
 		}
 
-		return res.status(200).json({ user: session.user });
+			// Fetch global (non-scoped) ALLOW grants for this user and include permission names
+			try {
+				const grants = await prisma.userPermission.findMany({
+					where: {
+						userId: session.user.id,
+						resourceType: null,
+						resourceId: null,
+						grant: 'ALLOW',
+					},
+					include: { permission: true },
+				})
+
+				const permissionNames = grants.map((g) => g.permission?.name).filter(Boolean as any)
+
+				return res.status(200).json({ user: session.user, permissions: permissionNames })
+			} catch (err) {
+				console.error('Error fetching user permissions:', err)
+				return res.status(200).json({ user: session.user, permissions: [] })
+			}
 	} catch (err) {
 		if (err instanceof APIError) {
 			return res.status(err.statusCode).json({ message: err.body?.message || 'Auth error' });

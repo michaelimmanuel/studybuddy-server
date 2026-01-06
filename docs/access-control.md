@@ -99,10 +99,3 @@ Seeding considerations:
 2. Run monitoring mode: log permission checks for a sample of requests (or use feature flag to run checks but not block).
 3. Gradually protect low-risk routes and run smoke tests.
 4. Protect critical admin routes last; keep an emergency admin grant script in DB for rollback.
-
-## Next recommended steps
-1. Confirm canonical permission names and resource types (I can draft a canonical list from existing docs).
-2. I'll prepare the Prisma schema patch and a seed file next (if you want), then implement `src/middleware/access.middleware.ts` and apply protections to a few routes as a proof-of-concept.
-
----
-File created by the assistant — tell me which implementation step to do next: Prisma schema, middleware, or seeds.

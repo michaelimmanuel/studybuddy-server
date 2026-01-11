@@ -47,7 +47,7 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
 
     // Calculate score with partial credit support
     let totalScore = 0;
-    const quizAnswers = answers.map((answer: { questionId: string; selectedAnswerId: string | null }) => {
+    const quizAnswers = answers.map((answer: { questionId: string; selectedAnswerId: string | string[] | null }) => {
       const question = pkg.packageQuestions.find(pq => pq.questionId === answer.questionId)?.question;
       if (!question) {
         throw new Error(`Question ${answer.questionId} not found in package`);
@@ -55,29 +55,30 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
 
       // Find all correct answers for this question
       const correctAnswers = question.answers.filter(a => a.isCorrect);
-      const correctAnswerIds = correctAnswers.map(a => a.id);
+      const correctAnswerIds = new Set(correctAnswers.map(a => a.id));
       
-      // Check if user selected a correct answer
-      const selectedAnswer = question.answers.find(a => a.id === answer.selectedAnswerId);
-      const isCorrect = selectedAnswer?.isCorrect || false;
+      // Normalize selectedAnswerId to array
+      const selectedIds = answer.selectedAnswerId 
+        ? (Array.isArray(answer.selectedAnswerId) ? answer.selectedAnswerId : [answer.selectedAnswerId])
+        : [];
 
-      // Calculate points for this question based on number of correct answers
+      // Calculate correctness for multi-answer questions
+      let isCorrect = false;
       let questionPoints = 0;
-      
-      if (correctAnswerIds.length === 1) {
-        // Single correct answer - traditional scoring (1 or 0)
+
+      if (correctAnswerIds.size === 1) {
+        // Single correct answer - traditional scoring
+        isCorrect = selectedIds.length === 1 && correctAnswerIds.has(selectedIds[0]);
         questionPoints = isCorrect ? 1 : 0;
-      } else if (correctAnswerIds.length > 1) {
-        // Multiple correct answers - partial credit
-        if (isCorrect) {
-          // Award points proportionally: 1 / number_of_correct_answers
-          questionPoints = 1 / correctAnswerIds.length;
-        } else {
-          // Wrong answer or no answer
-          questionPoints = 0;
-        }
+      } else if (correctAnswerIds.size > 1) {
+        // Multiple correct answers - must select all correct and no incorrect
+        const selectedSet = new Set(selectedIds);
+        const allCorrectSelected = [...correctAnswerIds].every(id => selectedSet.has(id));
+        const noIncorrectSelected = selectedIds.every(id => correctAnswerIds.has(id));
+        isCorrect = allCorrectSelected && noIncorrectSelected && selectedIds.length > 0;
+        questionPoints = isCorrect ? 1 : 0;
       } else {
-        // No correct answers marked (shouldn't happen, but handle it)
+        // No correct answers marked (shouldn't happen)
         questionPoints = 0;
       }
 
@@ -85,7 +86,7 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
 
       return {
         questionId: answer.questionId,
-        selectedAnswerId: answer.selectedAnswerId,
+        selectedAnswerIds: selectedIds,
         isCorrect
       };
     });
@@ -115,8 +116,7 @@ export const submitQuizAttempt = async (req: Request, res: Response) => {
               include: {
                 answers: true
               }
-            },
-            selectedAnswer: true
+            }
           }
         },
         package: {
@@ -186,8 +186,7 @@ export const getAttemptById = async (req: Request, res: Response) => {
               include: {
                 answers: true
               }
-            },
-            selectedAnswer: true
+            }
           },
           orderBy: {
             createdAt: 'asc'

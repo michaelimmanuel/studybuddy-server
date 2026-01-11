@@ -120,8 +120,7 @@ model Answer {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
 
-  question    Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  quizAnswers QuizAnswer[]
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@map("answer")
 }
@@ -275,16 +274,15 @@ model QuizAttempt {
 
 /// Individual answers for each quiz attempt
 model QuizAnswer {
-  id               String   @id @default(uuid())
-  attemptId        String
-  questionId       String
-  selectedAnswerId String? // Null if unanswered
-  isCorrect        Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  id                String   @id @default(uuid())
+  attemptId         String
+  questionId        String
+  selectedAnswerIds String[] // Array of selected answer IDs (supports multi-answer questions)
+  isCorrect         Boolean  @default(false)
+  createdAt         DateTime @default(now())
 
-  attempt        QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question       Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedAnswer Answer?     @relation(fields: [selectedAnswerId], references: [id], onDelete: SetNull)
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
   @@index([attemptId])

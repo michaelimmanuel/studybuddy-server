@@ -41,10 +41,11 @@ export const createBundle = async (req: Request, res: Response) => {
   }
 };
 
-// Get all bundles (Admin can see all, users see only active)
+// Get all bundles (Admin can see all, public/users see only active)
 export const getBundles = async (req: Request, res: Response) => {
   try {
-    const isAdmin = req.user!.role === "admin";
+    // Check if user is authenticated and is admin (optional auth)
+    const isAdmin = req.user?.role === "admin";
     
     const bundles = await prisma.bundle.findMany({
       where: isAdmin ? {} : { isActive: true },
@@ -124,7 +125,8 @@ export const getBundles = async (req: Request, res: Response) => {
 export const getBundleById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const isAdmin = req.user!.role === "admin";
+    // Check if user is authenticated and is admin (optional auth)
+    const isAdmin = req.user?.role === "admin";
 
     const bundleData = await prisma.bundle.findFirst({
       where: {

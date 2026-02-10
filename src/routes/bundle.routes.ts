@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireAdmin } from "../middleware/auth.middleware";
+import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth.middleware";
 import { validateBody, validateParams } from "../lib/validators/validation.middleware";
 import {
   createBundle,
@@ -20,9 +20,9 @@ import {
 
 const router = Router();
 
-// Public routes (no auth required - shows active bundles to public, all to admin if authenticated)
-router.get("/", getBundles); // Get all bundles (active only for non-admin, all for admin)
-router.get("/:id", validateParams(bundleIdSchema.shape.params), getBundleById); // Get specific bundle
+// Public routes (optional auth - shows active bundles to public, all to admin if authenticated)
+router.get("/", optionalAuth, getBundles); // Get all bundles (active only for non-admin, all for admin)
+router.get("/:id", optionalAuth, validateParams(bundleIdSchema.shape.params), getBundleById); // Get specific bundle
 
 // Admin-only routes (require authentication and admin role)
 router.post("/", requireAuth, requireAdmin, validateBody(createBundleSchema.shape.body), createBundle); // Create bundle

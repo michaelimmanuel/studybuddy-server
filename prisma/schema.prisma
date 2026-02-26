@@ -14,23 +14,25 @@ datasource db {
 }
 
 model User {
-  id               String            @id
-  name             String
-  email            String
-  emailVerified    Boolean           @default(false)
-  image            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @default(now()) @updatedAt
-  sessions         Session[]
-  accounts         Account[]
-  role             String?
-  banned           Boolean?          @default(false)
-  banReason        String?
-  banExpires       DateTime?
-  packagePurchases PackagePurchase[]
-  bundlePurchases  BundlePurchase[]
-  quizAttempts     QuizAttempt[]
-  UserPermission   UserPermission[]
+  id                  String                @id
+  name                String
+  email               String
+  emailVerified       Boolean               @default(false)
+  image               String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  role                String?
+  banned              Boolean?              @default(false)
+  banReason           String?
+  banExpires          DateTime?
+  packagePurchases    PackagePurchase[]
+  bundlePurchases     BundlePurchase[]
+  quizAttempts        QuizAttempt[]
+  UserPermission      UserPermission[]
+  missionProgress     UserMissionProgress[]
+  userActivities      UserActivity[]
 
   @@unique([email])
   @@map("user")
@@ -346,4 +348,67 @@ model UserPermission {
   @@index([permissionId])
   @@index([resourceType, resourceId])
   @@map("user_permission")
+}
+
+/// Mission system for gamification
+enum MissionType {
+  QUIZ_COMPLETION
+  CBT_COMPLETION
+  OSCE_COMPLETION
+  DAILY_CBT
+  HIGH_SCORE
+  PERFECT_SCORE
+  STUDY_STREAK
+}
+
+model Mission {
+  id          String   @id @default(cuid())
+  code        String   @unique // e.g., "QUIZ_COMPLETE_3", "CBT_COMPLETE_5"
+  type        MissionType
+  tier        Int      @default(0) // 1, 2, or 3 (0 for non-tiered missions)
+  title       String   // Display title
+  description String   // Mission description
+  requirement Json     // Flexible JSON for requirement data
+  reward      Json?    // Optional: points, badges, etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userProgress UserMissionProgress[]
+
+  @@index([type, tier])
+  @@map("mission")
+}
+
+model UserMissionProgress {
+  id            String    @id @default(cuid())
+  userId        String
+  missionId     String
+  progress      Int       @default(0) // Current progress count
+  isCompleted   Boolean   @default(false)
+  completedAt   DateTime?
+  lastUpdatedAt DateTime  @updatedAt
+  metadata      Json?     // Flexible data (e.g., last active date for streaks)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+  @@index([userId, isCompleted])
+  @@index([missionId])
+  @@map("user_mission_progress")
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date // Date only, no time
+  actions   Json     // Store activity types: quiz, cbt, osce
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("user_activity")
 }
